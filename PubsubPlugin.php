@@ -3,6 +3,15 @@ require_once 'OntoWiki/Plugin.php';
 
 class PubsubPlugin extends OntoWiki_Plugin
 {
+//    public function __construct($root, $config = null){
+//        parent::__construct($root, $config);
+//        $this->_log('construct pubsubplugin');
+//    }
+    
+    public function onCreateInternalFeed($event){
+        $event->feed->addHub($this->_privateConfig->hubUrl);
+    }
+    
     public function onInternalFeedDidChange($event)
     {
         $feedUrl = $event->feedUrl;

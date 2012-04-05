@@ -81,18 +81,17 @@ class PubsubController extends OntoWiki_Controller_Component
             $this->_log('No topic! Nothing to subscribe..'); 
             return;
         }
-
+        
         $success = false;
         try {
             require_once 'lib/subscriber.php';
             
             $topicUrl    = $get['topic'];
-            $callbackUrl = $this->_getCallbackUrl();
+            $callbackUrl = $this->getCallbackUrl();
             
             $hubUrl = null; 
             try {
                 $feed = new Zend_Feed_Atom($topicUrl);
-                
                 $hubUrl = $feed->link('hub');
                 if (null == $hubUrl) {
                     $this->_owApp->appendMessage(
@@ -215,7 +214,7 @@ class PubsubController extends OntoWiki_Controller_Component
 /**********************************************************************************************************************/
     
     public function hubbubAction()
-    {
+    {        
         // Disable rendering
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
