@@ -23,10 +23,11 @@ class HubSubscriptionModel
         $sql = 'INSERT INTO `ef_pubsub_hubsubscription` (`topic_url`, `callback_url`, `created_time`, `lease_seconds`,
             `verify_token`, `secret`, `expiration_time`, `subscription_state`, `challenge`, `verify_type`, 
             `number_of_retries`) VALUES (
-                "' . $data['hub.topic'] . '",
-                "' . $data['hub.callback'] . '",
+                "' . urlencode($data['hub.topic']) . '",
+                "' . urlencode($data['hub.callback']) . '",
                 '  . $created . ',
-                '  . ((isset($data['hub.lease_seconds']) && ($data['hub.lease_seconds'] != '')) ? $data['hub.lease_seconds'] : 'NULL' ) . ',
+                '  . ((isset($data['hub.lease_seconds']) && ($data['hub.lease_seconds'] != ''))
+                        ? $data['hub.lease_seconds'] : 'NULL' ) . ',
                 "' . (isset($data['hub.verify_token']) ? $data['hub.verify_token'] : 'NULL' ). '",
                 ' . (isset($data['hub.secret']) ? ('"'.$data['hub.secret'].'"') : 'NULL' ). ',
                 '  . $expirationTime . ',
@@ -61,8 +62,8 @@ class HubSubscriptionModel
 
         $this->_checkTable();
 
-        $sql = 'SELECT count(*) FROM `ef_pubsub_hubsubscription` WHERE `topic_url` = "' . $topic . '" AND 
-            `callback_url` = "' . $callback . '"';
+        $sql = 'SELECT count(*) FROM `ef_pubsub_hubsubscription` WHERE `topic_url` = "' . urlencode($topic) . '" AND 
+            `callback_url` = "' . urlencode($callback) . '"';
 
         if (!self::$testMode) {
             return (boolean)$this->_sqlQuery($sql);
@@ -91,8 +92,8 @@ class HubSubscriptionModel
 
         $this->_checkTable();
 
-        $sql = 'DELETE FROM `ef_pubsub_hubsubscription` WHERE `topic_url` = "' . $topic . '" AND 
-            `callback_url` = "' . $callback . '"';
+        $sql = 'DELETE FROM `ef_pubsub_hubsubscription` WHERE `topic_url` = "' . urlencode($topic) . '" AND 
+            `callback_url` = "' . urlencode($callback) . '"';
 
         if (!self::$testMode) {
             $this->_sqlQuery($sql);
@@ -136,7 +137,8 @@ class HubSubscriptionModel
 
         $this->_checkTable();
 
-        $sql = 'UPDATE `ef_pubsub_hubsubscription` SET ' . implode(', ', $updatesUnited) . ' WHERE `topic_url` = "' . $topic . '" AND `callback_url` = "' . $callback . '"';
+        $sql = 'UPDATE `ef_pubsub_hubsubscription` SET ' . implode(', ', $updatesUnited) .
+               ' WHERE `topic_url` = "' . urlencode($topic) . '" AND `callback_url` = "' . urlencode($callback) . '"';
 
         if (!self::$testMode) {
             $this->_sqlQuery($sql);
@@ -148,7 +150,6 @@ class HubSubscriptionModel
                         if ($key === 'number_of_retries') {
                             $matchingData[$key] = $matchingData[$key] + 1;
                         }
-
 
                     }
                     break;
@@ -162,7 +163,7 @@ class HubSubscriptionModel
         $this->_checkTable();
 
         $sql = 'SELECT * FROM `ef_pubsub_hubsubscription`
-            WHERE `subscription_state` = "active" AND `topic_url` = "' . $topicUrl . '"';
+            WHERE `subscription_state` = "active" AND `topic_url` = "' . urlencode($topicUrl) . '"';
 
         if (self::$testMode) {
             $result = array();
@@ -179,8 +180,8 @@ class HubSubscriptionModel
         $result = $this->_sqlQuery($sql);
         foreach ($result as $row) {
             $retRow = array();
-            $retRow['hub.topic'] = $row['topic_url'];
-            $retRow['hub.callback'] = $row['callback_url'];
+            $retRow['hub.topic'] = urldecode($row['topic_url']);
+            $retRow['hub.callback'] = urldecode($row['callback_url']);
             $retRow['hub.lease_seconds'] = $row['lease_seconds'];
             $retRow['hub.verify_token'] = $row['verify_token'];
             $retRow['hub.secret'] = $row['secret'];
@@ -214,8 +215,8 @@ class HubSubscriptionModel
         $result = $this->_sqlQuery($sql);
         foreach ($result as $row) {
             $retRow = array();
-            $retRow['hub.topic'] = $row['topic_url'];
-            $retRow['hub.callback'] = $row['callback_url'];
+            $retRow['hub.topic'] = urldecode($row['topic_url']);
+            $retRow['hub.callback'] = urldecode($row['callback_url']);
             $retRow['hub.lease_seconds'] = $row['lease_seconds'];
             $retRow['hub.verify_token'] = $row['verify_token'];
             $retRow['hub.secret'] = $row['secret'];
@@ -289,7 +290,7 @@ class HubSubscriptionModel
         if ((count($result) === 1) && isset($result[0]['count(*)'])) {
             return $result[0]['count(*)'];
         }
-        
+
         return $result;
     }
 }

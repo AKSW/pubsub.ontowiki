@@ -11,7 +11,7 @@ class HubNotificationModel
         $time = time();
 
         $sql = 'INSERT INTO `ef_pubsub_hubnotification` (`publisher_url`, `notification_time`) VALUES (
-            "' . $url . '", ' . $time . ')';
+            "' . urlencode($url) . '", ' . $time . ')';
 
         $this->_sqlQuery($sql);
     }
@@ -22,7 +22,7 @@ class HubNotificationModel
         $this->_checkTable();
 
         $url = $data['hub.url'];
-        $sql = 'SELECT count(*) FROM `ef_pubsub_hubnotification` WHERE `publisher_url` = "' . $url . '"';
+        $sql = 'SELECT count(*) FROM `ef_pubsub_hubnotification` WHERE `publisher_url` = "' . urlencode($url) . '"';
 
         return (boolean)$this->_sqlQuery($sql);
     }
@@ -33,7 +33,7 @@ class HubNotificationModel
         $this->_checkTable();
 
         $url = $data['hub.url'];
-        $sql = 'DELETE FROM `ef_pubsub_hubnotification` WHERE `publisher_url` = "' . $url . '"';
+        $sql = 'DELETE FROM `ef_pubsub_hubnotification` WHERE `publisher_url` = "' . urlencode($url) . '"';
 
         $this->_sqlQuery($sql);
     }
@@ -57,9 +57,10 @@ class HubNotificationModel
             $updatesUnited[] = $key . ' = ' . $updateValues[$i];
         }
 
-        $sql = 'UPDATE `ef_pubsub_hubnotification` SET ' . implode(', ', $updatesUnited) . ' WHERE `publisher_url` = "' . $url . '"';
+        $sql = 'UPDATE `ef_pubsub_hubnotification` SET ' . implode(', ', $updatesUnited) .
+               ' WHERE `publisher_url` = "' . urlencode($url) . '"';
 
-        $this->_sqlQuery($sql);        
+        $this->_sqlQuery($sql);
     }
 
     public function getNotifications()
@@ -72,7 +73,7 @@ class HubNotificationModel
         $result = $this->_sqlQuery($sql);
         foreach ($result as $row) {
             $retRow = array();
-            $retRow['hub.url'] = $row['publisher_url'];
+            $retRow['hub.url'] = urldecode($row['publisher_url']);
             $retRow['last_fetched'] = $row['last_fetched'];
             $retRow['notification_time'] = $row['notification_time'];
 
@@ -107,7 +108,7 @@ class HubNotificationModel
         if ((count($result) === 1) && isset($result[0]['count(*)'])) {
             return $result[0]['count(*)'];
         }
-        
+
         return $result;
     }
 }
