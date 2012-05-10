@@ -379,7 +379,7 @@ class PubsubController extends OntoWiki_Controller_Component
             $subscriptions = $subscriptionModel->getSubscriptionsForTopic($notification['hub.url']);
 
             $this->_log(
-                count($subscriptions) . ' subsriptions for notification ' . $i . ': ' . $notification['hub.url']
+                count($subscriptions) . ' subsriptions for notification ' . ($i+1) . ': ' . $notification['hub.url']
             );
 
             // TODO: Is the hub url correct here?
