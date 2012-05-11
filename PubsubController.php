@@ -122,6 +122,16 @@ class PubsubController extends OntoWiki_Controller_Component
         }
 
         if ($success) {
+            $store = Erfurt_App::getInstance()->getStore();
+            $subscription = $this->_privateConfig->subscriptionClass.time();
+            $statements = new Erfurt_Rdf_MemoryModel;
+            $statements->addRelation($subscription, $this->_privateConfig->feedPredicate, $get['topic']);
+            $statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $this->_owApp->getUser()->getUri());
+            $statements->addRelation($subscription, $this->_privateConfig->resourcePredicate, $get['r']);
+            $statements->addRelation($subscription, $this->_privateConfig->modelPredicate, $get['m']);
+            $statements->addRelation($subscription, $this->_privateConfig->typePredicate, $this->_privateConfig->subscriptionClass);            
+            $store->addMultipleStatements($this->_privateConfig->sysOntoUri, $statements->getStatements(), false);
+            
             $this->_owApp->appendMessage(
                 new OntoWiki_Message('Sucessfully subscribed', OntoWiki_Message::SUCCESS)
             );
