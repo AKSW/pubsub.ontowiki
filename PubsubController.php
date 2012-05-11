@@ -84,7 +84,6 @@ class PubsubController extends OntoWiki_Controller_Component
         $success = false;
         try {
             require_once 'lib/subscriber.php';
-
             $topicUrl    = $get['topic'];
             $callbackUrl = $this->getCallbackUrl();
 
@@ -471,7 +470,10 @@ class PubsubController extends OntoWiki_Controller_Component
         if (!isset($post['hub_callback'])) {
             return $this->_exception(400, 'hub.callback is missing');
         }
-        $params['hub.callback'] = urldecode($post['hub_callback']);
+        
+        # decode findet bereits php-seitig (?) statt
+        #$params['hub.callback'] = urldecode($post['hub_callback']);
+        $params['hub.callback'] = $post['hub_callback'];
         if (strrpos($params['hub.callback'], '#') !== false) {
             return $this->_exception(400, 'hub.callback is invalid');
         }
@@ -480,8 +482,10 @@ class PubsubController extends OntoWiki_Controller_Component
         if (!isset($post['hub_topic'])) {
             return $this->_exception(400, 'hub.topic is missing');
         }
-
-        $params['hub.topic'] = urldecode($post['hub_topic']);
+        
+        # decode findet bereits php-seitig (?) statt
+        #$params['hub.topic'] = urldecode($post['hub_topic']);        
+        $params['hub.topic'] = $post['hub_topic'];
         if (strrpos($params['hub.topic'], '#') !== false) {
             return $this->_exception(400, 'hub.topic is invalid');
         }
