@@ -186,19 +186,22 @@ class PubsubController extends OntoWiki_Controller_Component
             $feed = new Zend_Feed_Atom(null, $atomData);
             
             // functionality to check if a subscription for this topic is saved
-            /*$query = 'ASK FROM <'.$this->_privateConfig->sysOntoUri.'>
+            $query = 'SELECT ?s ?m FROM <'.$this->_privateConfig->sysOntoUri.'>
                       WHERE {
-                        ?s <'.$this->_privateConfig->feedPredicate.'> <'.$feed->link('self').'>
+                        ?s <'.$this->_privateConfig->feedPredicate.'> <'.$feed->link('self').'>.
+                        ?s <'.$this->_privateConfig->modelPredicate.'> ?m.
                       }';
             $queryObject = Erfurt_Sparql_SimpleQuery::initWithString($query);            
             $store = Erfurt_App::getInstance()->getStore();
-            $this->_log("QO: ".print_r($queryObject->__toString(),true));
-            $this->_log("QR: ".print_r($store->sparqlQuery($queryObject, array('debug' => true)),true));*/
-
-            $event = new Erfurt_Event('onExternalFeedDidChange');
-            $event->feedData = $atomData;
-            $event->feed = $feed;
-            $event->trigger();
+            $result = $store->sparqlQuery($queryObject, array(STORE_USE_AC => false));
+#            $this->_log("rs: ".print_r($store->sparqlQuery($queryObject, array(STORE_USE_AC => false)),true));
+            if(!empty($result)) {
+                $event = new Erfurt_Event('onExternalFeedDidChange');
+                $event->feedData = $atomData;
+                $event->feed = $feed;
+                $event->model = $result[0]['m'];
+                $event->trigger();
+            }
         } catch (Exception $e) {
             return $this->_exception(500, 'Error handling the delivery content: ' . $e->getMessage());
         }

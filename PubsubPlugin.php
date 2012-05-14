@@ -7,9 +7,15 @@ class PubsubPlugin extends OntoWiki_Plugin
 //        parent::__construct($root, $config);
 //        $this->_log('construct pubsubplugin');
 //    }
+    private function _getHubUrl(){
+        if(isset($this->_privateConfig->hubUrl) && $this->_privateConfig->hubUrl !== null && $this->_privateConfig->hubUrl !== '')
+            return $this->_privateConfig->hubUrl;
+        else
+            return OntoWiki::getInstance()->getUrlBase().'pubsub/hubbub/';
+    }
     
     public function onCreateInternalFeed($event){
-        $event->feed->addHub($this->_privateConfig->hubUrl);
+        $event->feed->addHub($this->_getHubUrl());
     }
     
     public function onInternalFeedDidChange($event)
@@ -21,7 +27,7 @@ class PubsubPlugin extends OntoWiki_Plugin
     private function _notify($feedUrl)
     {
         // Only notify if hub is set.
-        $hubUrl = $this->_privateConfig->hubUrl;
+        $hubUrl = $this->_getHubUrl();
         if (null == $hubUrl) {
             $this->_log('No hub configured');
             return;
