@@ -72,6 +72,9 @@ class PubsubController extends OntoWiki_Controller_Component
 
             return;
         }
+        
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
 
         if (!isset($get['topic']) || empty($get['topic'])) {
             $this->_owApp->appendMessage(
@@ -111,7 +114,7 @@ class PubsubController extends OntoWiki_Controller_Component
             $response = $s->subscribe($topicUrl);
             $result = ob_get_clean();
 
-            $this->_log('Subscriber Result: ' . $result);
+            $this->_log('Subscriber Result: ' . $result.' with response: '.print_r($response,true));
 
             if ($response !== false) {
                 $success = true;
@@ -119,25 +122,22 @@ class PubsubController extends OntoWiki_Controller_Component
         } catch (Exception $e) {
             $this->_log('Subscriber Exception: ' . $e->getMessage());
         }
-
+        
         if ($success) {
             $store = Erfurt_App::getInstance()->getStore();
             $subscription = $this->_privateConfig->subscriptionClass.time();
             $statements = new Erfurt_Rdf_MemoryModel;
             $statements->addRelation($subscription, $this->_privateConfig->feedPredicate, $get['topic']);
-            $statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $this->_owApp->getUser()->getUri());
+            #$statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $this->_owApp->getUser()->getUri());
+            $statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $get['user']);
             $statements->addRelation($subscription, $this->_privateConfig->resourcePredicate, $get['r']);
             $statements->addRelation($subscription, $this->_privateConfig->modelPredicate, $get['m']);
             $statements->addRelation($subscription, $this->_privateConfig->typePredicate, $this->_privateConfig->subscriptionClass);            
             $store->addMultipleStatements($this->_privateConfig->sysOntoUri, $statements->getStatements(), false);
             
-            $this->_owApp->appendMessage(
-                new OntoWiki_Message('Sucessfully subscribed', OntoWiki_Message::SUCCESS)
-            );
+            echo 1;
         } else {
-            $this->_owApp->appendMessage(
-                new OntoWiki_Message('Subscription failed', OntoWiki_Message::ERROR)
-            );
+            echo 0;
         }
     }
 
@@ -186,10 +186,11 @@ class PubsubController extends OntoWiki_Controller_Component
             $feed = new Zend_Feed_Atom(null, $atomData);
             
             // functionality to check if a subscription for this topic is saved
-            $query = 'SELECT ?s ?m FROM <'.$this->_privateConfig->sysOntoUri.'>
+            $query = 'SELECT ?s ?m ?o FROM <'.$this->_privateConfig->sysOntoUri.'>
                       WHERE {
                         ?s <'.$this->_privateConfig->feedPredicate.'> <'.$feed->link('self').'>.
                         ?s <'.$this->_privateConfig->modelPredicate.'> ?m.
+                        ?s <'.$this->_privateConfig->ownerPredicate.'> ?o.
                       }';
             $queryObject = Erfurt_Sparql_SimpleQuery::initWithString($query);            
             $store = Erfurt_App::getInstance()->getStore();
@@ -200,6 +201,7 @@ class PubsubController extends OntoWiki_Controller_Component
                 $event->feedData = $atomData;
                 $event->feed = $feed;
                 $event->model = $result[0]['m'];
+                $event->subOwner = $result[0]['o'];
                 $event->trigger();
             }
         } catch (Exception $e) {
