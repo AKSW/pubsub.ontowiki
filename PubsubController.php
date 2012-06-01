@@ -124,11 +124,12 @@ class PubsubController extends OntoWiki_Controller_Component
         }
         
         if ($success) {
+            // if the subscription at the hub was successful, triples which store informations
+            // related to the subscription are saved in the local configuartion knowledgebase
             $store = Erfurt_App::getInstance()->getStore();
             $subscription = $this->_privateConfig->subscriptionClass.time();
             $statements = new Erfurt_Rdf_MemoryModel;
             $statements->addRelation($subscription, $this->_privateConfig->feedPredicate, $get['topic']);
-            #$statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $this->_owApp->getUser()->getUri());
             $statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $get['user']);
             $statements->addRelation($subscription, $this->_privateConfig->resourcePredicate, $get['r']);
             $statements->addRelation($subscription, $this->_privateConfig->modelPredicate, $get['m']);
@@ -150,8 +151,6 @@ class PubsubController extends OntoWiki_Controller_Component
         // Disable rendering
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
-        
-        $this->_log(print_r($this->_request,true));
 
         if ($this->_request->isPost()) {
             $this->_handleCallbackPost(); // Delivery
@@ -177,7 +176,6 @@ class PubsubController extends OntoWiki_Controller_Component
 
         // We need the raw POST here.
         $atomData = file_get_contents('php://input');
-        #$this->_log(print_r($atomData,true));
 
         // Create a new event.
 // TODO: Create naming schema for events!
@@ -195,7 +193,6 @@ class PubsubController extends OntoWiki_Controller_Component
             $queryObject = Erfurt_Sparql_SimpleQuery::initWithString($query);            
             $store = Erfurt_App::getInstance()->getStore();
             $result = $store->sparqlQuery($queryObject, array(STORE_USE_AC => false));
-#            $this->_log("rs: ".print_r($store->sparqlQuery($queryObject, array(STORE_USE_AC => false)),true));
             if(!empty($result)) {
                 $event = new Erfurt_Event('onExternalFeedDidChange');
                 $event->feedData = $atomData;
@@ -238,7 +235,6 @@ class PubsubController extends OntoWiki_Controller_Component
             return $this->_exception(400, 'hub.challenge parameter required');
         }
         $challenge = $get['hub_challenge'];
-        $this->_log('Challenge: ' . $challenge);
 
         if (!isset($get['hub_lease_seconds'])) {
             return $this->_exception(400, 'hub.lease_seconds parameter required');
@@ -309,7 +305,6 @@ class PubsubController extends OntoWiki_Controller_Component
     public function hubbubAction()
     {
         $this->_log('enter hubbub action');
-        $this->_log(print_r($this->_request->getPost(), true));
         // Disable rendering
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
@@ -383,7 +378,6 @@ class PubsubController extends OntoWiki_Controller_Component
         // fetch and deliver sheduled notifications
         $notificationModel = new HubNotificationModel();
         $notifications = $notificationModel->getNotifications();
-        $this->_log(print_r($notifications, true));
 
         $this->_log('Performing delivery now: ' . count($notifications) . ' notifications');
 
@@ -419,7 +413,6 @@ class PubsubController extends OntoWiki_Controller_Component
             $status = $response->getStatus();
             if ($status === 200) {
                 $body = trim($response->getBody());
-                $this->_log('Notification payload: ' . $body);
                 // TODO: support alle Feed types... currently ATOM
 
                 // Deliver to all subscribers

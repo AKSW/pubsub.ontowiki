@@ -7,6 +7,11 @@ class PubsubPlugin extends OntoWiki_Plugin
 //        parent::__construct($root, $config);
 //        $this->_log('construct pubsubplugin');
 //    }
+    
+    /*
+     * This method loads a huburl from the configuration. If no huburl is avaiable,
+     * the hub from the pubsub-extension is used.
+     */
     private function _getHubUrl(){
         if(isset($this->_privateConfig->hubUrl) && $this->_privateConfig->hubUrl !== null && $this->_privateConfig->hubUrl !== '')
             return $this->_privateConfig->hubUrl;
@@ -14,6 +19,10 @@ class PubsubPlugin extends OntoWiki_Plugin
             return OntoWiki::getInstance()->getUrlBase().'pubsub/hubbub/';
     }
     
+    /*
+     * This method is triggerd when a local feed is created.
+     * It adds the locally saved huburl to the feed.
+     */
     public function onCreateInternalFeed($event){
         $event->feed->addHub($this->_getHubUrl());
     }
