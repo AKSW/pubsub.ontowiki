@@ -1,0 +1,30 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix doap: <http://usefulinc.com/ns/doap#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owconfig: <http://ns.ontowiki.net/SysOnt/ExtensionConfig/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix event: <http://ns.ontowiki.net/SysOnt/Events/> .
+@prefix : <https://raw.github.com/AKSW/pubsub.ontowiki/master/doap.n3#> .
+
+<> foaf:primaryTopic :pubsub .
+:pubsub a doap:Project ;
+  doap:name "pubsub" ;
+  owconfig:privateNamespace <https://raw.github.com/AKSW/pubsub.ontowiki/master/doap.n3#> ;
+  owconfig:enabled "true"^^xsd:boolean ;
+  rdfs:label "pubsubhubbub" ;
+  doap:description "pubsubhubbub support" ;
+  owconfig:authorLabel "Philipp Frischmuth" ;
+  doap:maintainer <http://aksw.org> ;
+  owconfig:templates "templates" ;
+  owconfig:pluginEvent event:onInternalFeedDidChange ;
+  owconfig:pluginEvent event:onCreateInternalFeed ;
+  :feedPredicate <http://ns.ontowiki.net/SysOnt/hasFeed> ;
+  :ownerPredicate <http://ns.ontowiki.net/SysOnt/hasOwner> ;
+  :modelPredicate <http://ns.ontowiki.net/SysOnt/hasModel> ;
+  :resourcePredicate <http://ns.ontowiki.net/SysOnt/hasResource> ;
+  :subscriptionClass <http://ns.ontowiki.net/SysOnt/Subscription> ;
+  :sysOntoUri <http://localhost/OntoWiki/Config/> ;
+  :typePredicate <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ;
+  doap:release :v1-0 .
+:v1-0 a doap:Version ;
+  doap:revision "1.0" .
