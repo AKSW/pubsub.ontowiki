@@ -18,6 +18,9 @@ svn checkout http://pubsubhubbub.googlecode.com/svn/trunk/ $1/pubsubhubbub
 
 git clone git://github.com/marianoguerra/tubes.git $1/tubes
 
+# fix a little bug in this file
+sed -i 's/from compiler.consts/#from compiler.consts/g' $1/tubes/werkzeug/templates.py
+
 echo "#!/bin/bash
 python google_appengine/dev_appserver.py pubsubhubbub/hub" > $1/start_hub_server.sh
 chmod +x $1/start_hub_server.sh
