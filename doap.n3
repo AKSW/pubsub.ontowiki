@@ -14,20 +14,25 @@
   owconfig:enabled "true"^^xsd:boolean ;
   rdfs:label "pubsubhubbub" ;
   doap:description "pubsubhubbub support" ;
-  owconfig:authorLabel "Philipp Frischmuth" ;
+  owconfig:authorLabel "Konrad Abicht & Lars Eidam" ;
   doap:maintainer <http://aksw.org> ;
   owconfig:templates "templates" ;
-  owconfig:pluginEvent event:onInternalFeedDidChange ;
-  owconfig:pluginEvent event:onCreateInternalFeed ;
-  :feedPredicate <http://ns.ontowiki.net/SysOnt/hasFeed> ;
-  :ownerPredicate <http://ns.ontowiki.net/SysOnt/hasOwner> ;
-  :modelPredicate <http://ns.ontowiki.net/SysOnt/hasModel> ;
-  :resourcePredicate <http://ns.ontowiki.net/SysOnt/hasResource> ;
-  :subscriptionClass <http://ns.ontowiki.net/SysOnt/Subscription> ;
-  :sysOntoUri <http://localhost/OntoWiki/Config/> ;
-  :typePredicate <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ;
   owconfig:hasModule :Subscriptions ;
-  doap:release :v1-0 .
+  doap:release :v1-0 ;
+  owconfig:config :SubscriptionConfig .
+  
+:SubscriptionConfig a owconfig:Config;
+    owconfig:id "subscriptions";
+    :modelUri "http://localhost/PubSub/Subscriptions/";
+    :classUri "http://localhost/PubSub/Subscription/" ;
+    :topicUrl "http://localhost/PubSub/topicUrl/" ;
+    :hubUrl "http://localhost/PubSub/hubUrl/" ;
+    :createTime "http://localhost/PubSub/createTime/" ;
+    :leaseSeconds "http://localhost/PubSub/leaseSeconds/" ;
+    :verifyToken "http://localhost/PubSub/verifyToken/" ;
+    :secret "http://localhost/PubSub/secret/" ;
+    :expirationTime "http://localhost/PubSub/expirationTime/" ;
+    :subscriptionState "http://localhost/PubSub/subscriptionState/" .
 
 :Subscriptions a owconfig:Module ;
   rdfs:label "Subscriptions" ;
