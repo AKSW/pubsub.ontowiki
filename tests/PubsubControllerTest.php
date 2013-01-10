@@ -33,7 +33,7 @@ class PubsubControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
         // Excute request  
         $this->dispatch('/pubsub/subscription');
         
-        //var_dump($this->response);
+        var_dump($this->response->getBody());
         
         // Check response
         $this->assertResponseCode(200);

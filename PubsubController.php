@@ -1,7 +1,9 @@
 <?php
 
 class PubsubController extends OntoWiki_Controller_Component
-{   
+{
+    protected $_subscriptionModelInstance;
+    
     public function init()
     {
         parent::init();
@@ -25,7 +27,7 @@ class PubsubController extends OntoWiki_Controller_Component
             $this->_privateConfig->get('subscriptions')->get('modelUri'),
             $this->_owApp->erfurt->getStore()
         );
-        $subscriptionHelper->addModel();
+        $this->_subscriptionModelInstance = $subscriptionHelper->addModel();
         
     }
     
@@ -45,13 +47,21 @@ class PubsubController extends OntoWiki_Controller_Component
      */
     public function subscriptionAction()
     {
+        //ToDo: Quickfix because of Error:
+        //Use of undefined constant OW_SHOW_MAX - assumed 'OW_SHOW_MAX'
+        if (!defined('OW_SHOW_MAX'))
+            define ('OW_SHOW_MAX', 5);
+        
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
         
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
         
-        $subscriptionStorage = new PubSubHubbub_Subscription;
+        $subscriptionStorage = new PubSubHubbub_Subscription(
+            $this->_subscriptionModelInstance,
+            $this->_privateConfig->get('subscriptions')
+        );
         
         $hubUrl = $this->getParam('hubUrl');
         $topicUrl = $this->getParam('topicUrl');
