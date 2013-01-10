@@ -17,9 +17,11 @@ class PubSubHubbub_ModelHelper
     
     /**
      * Action add the required publisher and subscriber models
+     * @return new model
      */
     public function addModel()
     {
+        $model = "";
         if (false == $this->_store->isModelAvailable($this->_pubSubModelUri))
         {
             // create model
@@ -37,5 +39,11 @@ class PubSubHubbub_ModelHelper
                 array( "value" => "http://ns.ontowiki.net/SysBase/", "type" => "uri")
             );
         }
+        else
+        {
+            $model = $this->_store->getModel($this->_pubSubModelUri);
+        }
+        
+        return $model;
     }
 }
