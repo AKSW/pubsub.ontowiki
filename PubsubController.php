@@ -107,4 +107,32 @@ class PubsubController extends OntoWiki_Controller_Component
         }
     }
     
+    /**
+     * Callback Action
+     */
+    public function callbackAction()
+    {
+        if ($this->_request->isPost())
+            $_SERVER['REQUEST_METHOD'] = 'post';
+        else
+            $_SERVER['REQUEST_METHOD'] = 'get';
+        
+        // disable rendering
+        $this->_helper->viewRenderer->setNoRender();
+        
+        // disable layout for Ajax requests
+        $this->_helper->layout()->disableLayout();
+        
+        $subscriptionStorage = new PubSubHubbub_Subscription(
+            $this->_subscriptionModelInstance,
+            $this->_privateConfig->get('subscriptions')
+        );
+        $callback = new PubSubHubbub_Subscriber_Callback;
+        $callback->setStorage($subscriptionStorage);
+
+        $callback->handle($this->_request->getParams());
+        
+        $callback->sendResponse();
+    }
+    
 }
