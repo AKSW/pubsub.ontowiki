@@ -7,6 +7,12 @@ class PubsubController extends OntoWiki_Controller_Component
     public function init()
     {
         parent::init();
+        
+        //ToDo: Quickfix because of Error:
+        //Use of undefined constant OW_SHOW_MAX - assumed 'OW_SHOW_MAX'
+        if (!defined('OW_SHOW_MAX'))
+            define ('OW_SHOW_MAX', 5);
+            
         // Zend_Loader for class autoloading
         $loader = Zend_Loader_Autoloader::getInstance();
         $loader->registerNamespace('PubSubHubbub_');
@@ -47,11 +53,6 @@ class PubsubController extends OntoWiki_Controller_Component
      */
     public function subscriptionAction()
     {
-        //ToDo: Quickfix because of Error:
-        //Use of undefined constant OW_SHOW_MAX - assumed 'OW_SHOW_MAX'
-        if (!defined('OW_SHOW_MAX'))
-            define ('OW_SHOW_MAX', 5);
-        
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
         
@@ -67,6 +68,7 @@ class PubsubController extends OntoWiki_Controller_Component
         $topicUrl = $this->getParam('topicUrl');
         $callBackUrl = $this->getParam('callBackUrl');
         $subscriptionMode = $this->getParam('subscriptionMode');
+        $verifyMode = $this->getParam('verifyMode');
         
         if ("" != $hubUrl && "" != $topicUrl && "" != $callBackUrl)
         {
@@ -75,6 +77,7 @@ class PubsubController extends OntoWiki_Controller_Component
             $subscriber->addHubUrl($hubUrl);
             $subscriber->setTopicUrl($topicUrl);
             $subscriber->setCallbackUrl($callBackUrl);
+            $subscriber->setPreferredVerificationMode($verifyMode);
 
             // check subscribtion mode
             if ("subscribe" == $subscriptionMode)
