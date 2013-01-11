@@ -72,7 +72,7 @@ class PubsubController extends OntoWiki_Controller_Component
         
         if ("" != $hubUrl && "" != $topicUrl && "" != $callBackUrl)
         {
-            $subscriber = new Zend_Feed_Pubsubhubbub_Subscriber;
+            $subscriber = new PubSubHubbub_Subscriber;
             $subscriber->setStorage($subscriptionStorage);
             $subscriber->addHubUrl($hubUrl);
             $subscriber->setTopicUrl($topicUrl);
