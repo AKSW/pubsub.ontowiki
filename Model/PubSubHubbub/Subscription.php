@@ -42,29 +42,62 @@ class PubSubHubbub_Subscription
      * @param $data data array
      * @return array Statements Array
      */
-    private function _generateStatements($subscriptionResourceUri, $data)
+    private function _generateStatements($subscriptionResourceUri, $data, $subscriptionResourceProperties = null)
     {
-        $statements = array();
-        $statements[$subscriptionResourceUri] = array();
-        $statements[$subscriptionResourceUri]['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'] = array();
-        $statements[$subscriptionResourceUri]['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'][]
-            = array(
-                'value' => $this->_subscriptionConfig->get('classUri'),
-                'type' => 'uri'
-            );
+        $addStatements = array();
+        $deleteStatements = array();
+        $addStatements[$subscriptionResourceUri] = array();
+        if (!isset($subscriptionResourceProperties))
+        {
+            $addStatements[$subscriptionResourceUri]['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'] = array();
+            $addStatements[$subscriptionResourceUri]['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'][]
+                = array(
+                    'value' => $this->_subscriptionConfig->get('classUri'),
+                    'type' => 'uri'
+                );
+        }
         foreach ($data as $dataKey => $dataValue)
         {
-            if (isset($dataValue))
-                $statements[$subscriptionResourceUri]
-                [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])] = array(
+            if (isset($dataValue) &&
+                (!isset($subscriptionResourceProperties) ||
+                    (
+                        isset($subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content']) &&
+                        $dataValue != $subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content']
+                    )
+                )
+            )
+            {
+                $addStatements[$subscriptionResourceUri]
+                    [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])] = array(
                         array(
                         'value' => $dataValue,
                         'type' => 'literal'
                         )
                     );
+                if (isset($subscriptionResourceProperties) &&
+                    (
+                        isset($subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content']) &&
+                        $dataValue != $subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content']
+                    )
+                )
+                {
+                    if (0 == count($deleteStatements))
+                        $deleteStatements[$subscriptionResourceUri] = array();
+                    $deleteStatements[$subscriptionResourceUri]
+                    [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])] = array(
+                        array(
+                        'value' => $subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content'],
+                        'type' => 'literal'
+                        )
+                    );
+                }
+            }
         }
         
-        return $statements;
+        $returnArray = array();
+        $returnArray['addStatements'] = $addStatements;
+        $returnArray['deleteStatements'] = $deleteStatements;
+        return $returnArray;
     }
     
     /**
@@ -91,48 +124,27 @@ class PubSubHubbub_Subscription
          );
         
         $subscriptionResourceProperties = $subscriptionResource->getValues();
+        
 
         if (0 < count($subscriptionResourceProperties))
         {
-            $oldData = $data;
+            $subscriptionResourceProperties = $subscriptionResourceProperties[$this->_subscriptionModelInstance->getModelIri()];
             $data['created_time'] = $subscriptionResourceProperties
-                [$this->_subscriptionModelInstance->getModelIri()]
-                [$this->_subscriptionConfig->get('createdTime')][0]['content'];
+                [$this->_subscriptionConfig->get($this->_propertyMatching['created_time'])][0]['content'];
             $now = new Zend_Date;
             if (isset($data['lease_seconds'])) {
-                $data['expiration_time'] = $now->add($data['lease_seconds'], Zend_Date::ECOND)
+                $data['expiration_time'] = $now->add($data['lease_seconds'], Zend_Date::SECOND)
                 ->get('yyyy-MM-dd HH:mms');
             }
-            if ($oldData['created_time'] != $data['created_time'])
-            {
-                $this->_subscriptionModelInstance->deleteMatchingStatements(
-                    $subscriptionResourceUri,
-                    $this->_subscriptionConfig->get($this->_propertyMatching['created_time']),
-                    array('value' => $oldData['created_time'], 'type' => 'literal')
-                );
-                $this->_subscriptionModelInstance->addStatement(
-                    $subscriptionResourceUri,
-                    $this->_subscriptionConfig->get($this->_propertyMatching['created_time']),
-                    array('value' => $data['created_time'], 'type' => 'literal')
-                );
-            }
-            if ($oldData['expiration_time'] != $data['expiration_time'])
-            {
-                $this->_subscriptionModelInstance->deleteMatchingStatements(
-                    $subscriptionResourceUri,
-                    $this->_subscriptionConfig->get($this->_propertyMatching['expiration_time']),
-                    array('value' => $oldData['expirationTime'], 'type' => 'literal')
-                );
-                $this->_subscriptionModelInstance->addStatement(
-                    $subscriptionResourceUri,
-                    $this->_subscriptionConfig->get($this->_propertyMatching['expiration_time']),
-                    array('value' => $data['expirationTime'], 'type' => 'literal')
-                );
-            }
+            $statements = $this->_generateStatements($subscriptionResourceUri, $data, $subscriptionResourceProperties);
+            $this->_subscriptionModelInstance->addMultipleStatements($statements['addStatements']);
+            $this->_subscriptionModelInstance->deleteMultipleStatements($statements['deleteStatements']);
+
             return false;
         } else {
             $statements = $this->_generateStatements($subscriptionResourceUri, $data);
-            $this->_subscriptionModelInstance->addMultipleStatements($statements);
+            $this->_subscriptionModelInstance->addMultipleStatements($statements['addStatements']);
+
             return true;
         }
         
@@ -184,10 +196,10 @@ class PubSubHubbub_Subscription
          );
         
         $subscriptionResourceProperties = $subscriptionResource->getValues();
-        $subscriptionResourceProperties = $subscriptionResourceProperties[$this->_subscriptionModelInstance->getModelIri()];
 
         if (0 < count($subscriptionResourceProperties))
         {
+            $subscriptionResourceProperties = $subscriptionResourceProperties[$this->_subscriptionModelInstance->getModelIri()];
             $data = array();
             foreach ($this->_propertyMatching as $dataKey => $propertyKey)
             {
