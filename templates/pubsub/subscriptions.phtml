@@ -1,6 +1,7 @@
 <script>
     selectedResource.isLinkedData = false;
-    selectedResource.link = '';
+    var headerFeedTags = '<?php echo json_encode($this->headerFeedTags); ?>';
+    headerFeedTags = jQuery.parseJSON(headerFeedTags);
     
     $(document).ready(function(){
         $.ajax({
@@ -11,19 +12,20 @@
         }).done(function ( data, textStatus, jqXHR ) {
         }).success(function ( data, textStatus, jqXHR ) {
             selectedResource.isLinkedData = true;
-            selectedResource.link = jqXHR.getResponseHeader('Link');
-            $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn(800,function(){
-                if (null != selectedResource.link)
-                {
-                    $.ajax({
-                        url: selectedResource.link
-                    }).error(function ( xhr ) {
-                        console.log(xhr);
-                    }).success(function ( data, textStatus, jqXHR ) {
-                        $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                        console.log(data);
-                    });
-                }
+            $.each( headerFeedTags, function( key, value ) {
+                $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn(800,function(){
+                    if (null != jqXHR.getResponseHeader(value))
+                    {
+                        $.ajax({
+                            url: jqXHR.getResponseHeader(value)
+                        }).error(function ( xhr ) {
+                            console.log(xhr);
+                        }).success(function ( data, textStatus, jqXHR ) {
+                            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+                            console.log(data);
+                        });
+                    }
+                });
             });
         });
     })

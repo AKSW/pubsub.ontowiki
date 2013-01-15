@@ -35,6 +35,13 @@ class SubscriptionsModule extends OntoWiki_Module
 
     public function getContents()
     {
+        $headerFeedTags = $this->_privateConfig->get('subscriptions')->get('headerFeedTags');
+        if (is_object($headerFeedTags))
+            $headerFeedTags = $headerFeedTags->toArray();
+        else
+            $headerFeedTags = array($headerFeedTags);
+        $this->view->headerFeedTags = $headerFeedTags;
+
         return $this->render('pubsub/subscriptions');
     }
 }
