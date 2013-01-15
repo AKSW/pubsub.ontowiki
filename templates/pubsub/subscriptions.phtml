@@ -1,5 +1,35 @@
+<script>
+    selectedResource.isLinkedData = false;
+    selectedResource.link = '';
+    
+    $(document).ready(function(){
+        $.ajax({
+            url: selectedResource.URI
+        }).error(function ( xhr ) {
+            console.log(xhr);
+            $('#pubsub-subscriptions-msgBoxNotLinkedData').fadeIn('slow');
+        }).done(function ( data, textStatus, jqXHR ) {
+        }).success(function ( data, textStatus, jqXHR ) {
+            selectedResource.isLinkedData = true;
+            selectedResource.link = jqXHR.getResponseHeader('Link');
+            $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
+            if (null != selectedResource.link)
+            {
+                $.ajax({
+                    url: selectedResource.link
+                }).error(function ( xhr ) {
+                    console.log(xhr);
+                }).success(function ( data, textStatus, jqXHR ) {
+                    $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+                    console.log(data);
+                });
+            }
+        });
+    })
+</script>
+
 <!-- If this resource is not a local resource and feed + attached hub exists on it -->
-<div class="has-contextmenu-area">
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxLinkedData">
     <div class="contextmenu">
         <a class="item">
             <span class="icon icon-save" title="Pull and Save">
@@ -13,8 +43,14 @@
     </div>
 </div>
 
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxNotLinkedData">
+    <div class="messagebox error">
+        This resource is not available as Linked Data.
+    </div>
+</div>
+
 <!-- If this resource is not a local resource and feed + attached hub exists on it -->
-<div class="has-contextmenu-area">
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxLinkedDataAndFeed">
     <div class="contextmenu">
         <a class="item">
             <span class="icon icon-toggle-on" title="Add Updates Subsciption">
@@ -30,7 +66,7 @@
 </div>
 
 <!-- If this resource is not a local resource and a subscription to it already exists -->
-<div class="has-contextmenu-area">
+<div class="has-contextmenu-area" style="display:none;">
     <div class="contextmenu">
         <a class="item">
             <span class="icon icon-toggle-off" title="Cancel Updates Subscription">
@@ -45,7 +81,7 @@
 </div>
 
 <!-- If this resource IS a local resource and linked data enabled  -->
-<div class="has-contextmenu-area">
+<div class="has-contextmenu-area" style="display:none;">
     <div class="contextmenu">
         <a class="item">
             <span class="icon icon-cancel" title="Cancel Subscriptions">
