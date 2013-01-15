@@ -12,18 +12,19 @@
         }).success(function ( data, textStatus, jqXHR ) {
             selectedResource.isLinkedData = true;
             selectedResource.link = jqXHR.getResponseHeader('Link');
-            $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
-            if (null != selectedResource.link)
-            {
-                $.ajax({
-                    url: selectedResource.link
-                }).error(function ( xhr ) {
-                    console.log(xhr);
-                }).success(function ( data, textStatus, jqXHR ) {
-                    $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                    console.log(data);
-                });
-            }
+            $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn(800,function(){
+                if (null != selectedResource.link)
+                {
+                    $.ajax({
+                        url: selectedResource.link
+                    }).error(function ( xhr ) {
+                        console.log(xhr);
+                    }).success(function ( data, textStatus, jqXHR ) {
+                        $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+                        console.log(data);
+                    });
+                }
+            });
         });
     })
 </script>
