@@ -331,4 +331,22 @@ class PubSubHubbub_Subscription
             );
         $this->_subscriptionModelInstance->addMultipleStatements($addStatements);
     }
+    
+    /**
+     * get the topic url for a given resource uri
+     */
+    public function getTopicByResourceUri($resourceUri)
+    {
+        $results = $this->_subscriptionModelInstance->sparqlQuery (
+            'SELECT ?topicUrl
+            WHERE {
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('topicUrl') . '> ?topicUrl .
+            }'
+        );
+        if (0 < count($results))
+            return $results[0]['topicUrl'];
+        else
+            return false;
+    }
 }

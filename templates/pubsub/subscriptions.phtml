@@ -2,6 +2,7 @@
     selectedResource.isLinkedData = false;
     var standardHubUrl = '<?php echo $this->standardHubUrl; ?>';
     var callbackUrl = '<?php echo $this->callbackUrl; ?>';
+    var topicUrl = '<?php echo false === $this->topicUrl ? '' : $this->topicUrl; ?>';
     var headerFeedTags = '<?php echo json_encode($this->headerFeedTags); ?>';
     headerFeedTags = jQuery.parseJSON(headerFeedTags);
     
@@ -14,28 +15,41 @@
         }).done(function ( data, textStatus, jqXHR ) {
         }).success(function ( data, textStatus, jqXHR ) {
             selectedResource.isLinkedData = true;
-            $.each( headerFeedTags, function( key, value ) {
+            if ('' != topicUrl)
+            {
                 $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn(800,function(){
-                    if (null != jqXHR.getResponseHeader(value))
-                    {
-                        $.ajax({
-                            url: jqXHR.getResponseHeader(value)
-                        }).error(function ( xhr ) {
-                            console.log(xhr);
-                        }).success(function ( data, textStatus, jqXHR ) {
-                            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                            
-                            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                                subscribe(data.baseURI, 'subscribe');
-                            });
-                            
-                            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                                subscribe(data.baseURI, 'unsubscribe');
-                            });
-                        });
-                    }
+                    $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
                 });
-            });
+                $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+                    subscribe(topicUrl, 'subscribe');
+                });
+                $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+                    subscribe(topicUrl, 'unsubscribe');
+                });
+            }
+            else
+            {
+                $.each( headerFeedTags, function( key, value ) {
+                    $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn(800,function(){
+                        if (null != jqXHR.getResponseHeader(value))
+                        {
+                            $.ajax({
+                                url: jqXHR.getResponseHeader(value)
+                            }).error(function ( xhr ) {
+                                console.log(xhr);
+                            }).success(function ( data, textStatus, jqXHR ) {
+                                $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+                                $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+                                    subscribe(data.baseURI, 'subscribe');
+                                });
+                                $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+                                    subscribe(data.baseURI, 'unsubscribe');
+                                });
+                            });
+                        }
+                    });
+                });
+            }
         });
     });
     
@@ -56,13 +70,15 @@ function subscribe(topicUrl, mode) {
     }).success(function ( data, textStatus, jqXHR ) {
         if ('subscribe' == mode)
         {
-            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeOut('slow');
-            $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
+            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeOut('slow', function() {
+                $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
+            });
         }
         else
         {
-            $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeOut('slow');
-            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+            $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeOut('slow', function() {
+                $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+            });
         }
         //console.log(data);
     }).done(function ( data, textStatus, jqXHR ) {
