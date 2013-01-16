@@ -69,6 +69,7 @@ class PubsubController extends OntoWiki_Controller_Component
         $callBackUrl = $this->getParam('callBackUrl');
         $subscriptionMode = $this->getParam('subscriptionMode');
         $verifyMode = $this->getParam('verifyMode');
+        $sourceResource = $this->getParam('sourceResource');
         
         if ("" != $hubUrl && "" != $topicUrl && "" != $callBackUrl)
         {
@@ -81,7 +82,11 @@ class PubsubController extends OntoWiki_Controller_Component
 
             // check subscribtion mode
             if ("subscribe" == $subscriptionMode)
+            {
                 $subscriber->subscribeAll();
+                if ("" != $sourceResource)
+                    $subscriber->addSourceResourceUri($sourceResource);
+            }
             else if ("unsubscribe" == $subscriptionMode)
                 $subscriber->unsubscribeAll();
             else
@@ -90,7 +95,7 @@ class PubsubController extends OntoWiki_Controller_Component
                 $this->_response->setHttpResponseCode(500);
                 return;
             }
-            
+
             if ($subscriber->isSuccess() && 0 == count($subscriber->getErrors()))
                 $this->_response->setBody('')
                      ->setHttpResponseCode(200);

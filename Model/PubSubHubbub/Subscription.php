@@ -125,7 +125,6 @@ class PubSubHubbub_Subscription
         
         $subscriptionResourceProperties = $subscriptionResource->getValues();
         
-
         if (0 < count($subscriptionResourceProperties))
         {
             $subscriptionResourceProperties = $subscriptionResourceProperties[$this->_subscriptionModelInstance->getModelIri()];
@@ -312,4 +311,24 @@ class PubSubHubbub_Subscription
         return false;*/
     }
 
+    /**
+     * function save the resource uri to the subscription
+     */
+    public function addSourceResourceUri($key, $resourceUri)
+    {
+        // generate uri with topic_url and hub_url
+        $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
+            $this->_subscriptionConfig->get('classUri'),
+            $key
+        );
+        $addStatements = array();
+        $addStatements[$subscriptionResourceUri] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('sourceResource')] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('sourceResource')][]
+            = array(
+                'value' => $resourceUri,
+                'type' => 'uri'
+            );
+        $this->_subscriptionModelInstance->addMultipleStatements($addStatements);
+    }
 }

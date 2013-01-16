@@ -41,6 +41,9 @@ class SubscriptionsModule extends OntoWiki_Module
         else
             $headerFeedTags = array($headerFeedTags);
         $this->view->headerFeedTags = $headerFeedTags;
+        
+        $this->view->standardHubUrl = $this->_privateConfig->get('subscriptions')->get('standardHubUrl');
+        $this->view->callbackUrl = $this->_privateConfig->get('subscriptions')->get('callbackUrl');
 
         return $this->render('pubsub/subscriptions');
     }

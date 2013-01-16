@@ -1,5 +1,7 @@
 <script>
     selectedResource.isLinkedData = false;
+    var standardHubUrl = '<?php echo $this->standardHubUrl; ?>';
+    var callbackUrl = '<?php echo $this->callbackUrl; ?>';
     var headerFeedTags = '<?php echo json_encode($this->headerFeedTags); ?>';
     headerFeedTags = jQuery.parseJSON(headerFeedTags);
     
@@ -22,13 +24,51 @@
                             console.log(xhr);
                         }).success(function ( data, textStatus, jqXHR ) {
                             $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                            console.log(data);
+                            
+                            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+                                subscribe(data.baseURI, 'subscribe');
+                            });
+                            
+                            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+                                subscribe(data.baseURI, 'unsubscribe');
+                            });
                         });
                     }
                 });
             });
         });
-    })
+    });
+    
+   
+function subscribe(topicUrl, mode) {
+    $.ajax({
+        url: urlBase + 'pubsub/subscription',
+        data:{
+            hubUrl : standardHubUrl,
+            topicUrl : topicUrl,
+            callBackUrl : callbackUrl,
+            subscriptionMode : mode,
+            verifyMode : 'sync',
+            sourceResource : selectedResource.URI
+        }
+    }).error(function ( xhr ) {
+        console.log(xhr);
+    }).success(function ( data, textStatus, jqXHR ) {
+        if ('subscribe' == mode)
+        {
+            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeOut('slow');
+            $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
+        }
+        else
+        {
+            $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeOut('slow');
+            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+        }
+        //console.log(data);
+    }).done(function ( data, textStatus, jqXHR ) {
+    });
+}
+
 </script>
 
 <!-- If this resource is not a local resource and feed + attached hub exists on it -->
@@ -55,7 +95,7 @@
 <!-- If this resource is not a local resource and feed + attached hub exists on it -->
 <div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxLinkedDataAndFeed">
     <div class="contextmenu">
-        <a class="item">
+        <a class="item" id="pubsub-subscriptions-buttonSubscribe">
             <span class="icon icon-toggle-on" title="Add Updates Subsciption">
                 <span>Add Updates Subsciption</span>
             </span>
@@ -69,9 +109,9 @@
 </div>
 
 <!-- If this resource is not a local resource and a subscription to it already exists -->
-<div class="has-contextmenu-area" style="display:none;">
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxFeedSubscribed">
     <div class="contextmenu">
-        <a class="item">
+        <a class="item" id="pubsub-subscriptions-buttonUnSubscribe">
             <span class="icon icon-toggle-off" title="Cancel Updates Subscription">
                 <span>Cancel Updates Subscription</span>
             </span>

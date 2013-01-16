@@ -92,5 +92,21 @@ class PubSubHubbub_Subscriber
             $this->_urlEncode($params)
         );
     }
+    
+    /**
+     * function save the resource uri to the subscription
+     */
+    public function addSourceResourceUri($resourceUri)
+    {
+        $hubs = $this->getHubUrls();
+        
+        foreach ($hubs as $hubUrl) {
+            $params = array(
+                'hub.topic' => $this->getTopicUrl(),
+            );
+            $key = $this->_generateSubscriptionKey($params, $hubUrl);
+            $this->_storage->addSourceResourceUri($key, $resourceUri);
+        }
+    }
 
 }
