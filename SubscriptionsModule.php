@@ -2,7 +2,7 @@
 /**
  * This file is part of the {@link http://ontowiki.net OntoWiki} project.
  *
- * @copyright Copyright (c) 2012, {@link http://aksw.org AKSW}
+ * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
  * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
  */
 
@@ -19,7 +19,7 @@ class SubscriptionsModule extends OntoWiki_Module
     protected $_subscriptionModelInstance;
     protected $_subscriptionStorage;
     protected $_headerFeedTags;
-    
+
     /**
      * Constructor
      */
@@ -30,7 +30,7 @@ class SubscriptionsModule extends OntoWiki_Module
         $loader->registerNamespace('PubSubHubbub_');
 
         $path = __DIR__;
-		set_include_path(
+        set_include_path(
             get_include_path() .
             PATH_SEPARATOR .
             $path .
@@ -39,7 +39,7 @@ class SubscriptionsModule extends OntoWiki_Module
             DIRECTORY_SEPARATOR .
             PATH_SEPARATOR
         );
-        
+
         // get header feed tags from config
         $headerFeedTags = $this->_privateConfig->get('subscriptions')->get('headerFeedTags');
         if (is_object($headerFeedTags))
@@ -47,14 +47,14 @@ class SubscriptionsModule extends OntoWiki_Module
         else
             $headerFeedTags = array($headerFeedTags);
         $this->_headerFeedTags = $headerFeedTags;
-        
+
         // create model if it does not exist
         $subscriptionHelper = new PubSubHubbub_ModelHelper(
             $this->_privateConfig->get('subscriptions')->get('modelUri'),
             $this->_owApp->erfurt->getStore()
         );
         $this->_subscriptionModelInstance = $subscriptionHelper->addModel();
-        
+
         $this->_subscriptionStorage = new PubSubHubbub_Subscription(
             $this->_subscriptionModelInstance,
             $this->_privateConfig->get('subscriptions')
@@ -75,37 +75,37 @@ class SubscriptionsModule extends OntoWiki_Module
     {
         $this->view->selectedResourceUri = $this->_owApp->selectedResource->getUri();
         $this->view->uriStatus = $this->_getUriStatus($this->_owApp->selectedResource);
-        $this->view->topicUrl = $this->_subscriptionStorage->getTopicByResourceUri($this->_owApp->selectedResource->getUri());
-        
+        $this->view->topicUrl = $this->_subscriptionStorage->getTopicByResourceUri(
+            $this->_owApp->selectedResource->getUri()
+        );
+
         $this->view->standardHubUrl = $this->_privateConfig->get('subscriptions')->get('standardHubUrl');
         $this->view->callbackUrl = $this->_privateConfig->get('subscriptions')->get('callbackUrl');
 
         return $this->render('pubsub/subscriptions');
     }
-    
+
     private function _getUriStatus($resource)
     {
         $result = array();
         $result['isLinkedData'] = false;
-        
+
         // check for LinkedData
         $wrapper = new Erfurt_Wrapper_LinkeddataWrapper();
         $result['isLinkedData'] = $wrapper->isAvailable($resource, '');
         $result['feedLinks'] = array();
-        if ($result['isLinkedData'])
-        {
+        if ($result['isLinkedData']) {
             // check for header tags
             $httpClient = Erfurt_App::getInstance()->getHttpClient($resource->getUri());
             $httpClient->setHeaders('Accept', 'application/rdf+xml');
-            
-            foreach ($this->_headerFeedTags as $headerFeedTag)
-            {
+
+            foreach ($this->_headerFeedTags as $headerFeedTag) {
                 $headerFeedTagUrl = $httpClient->request()->getHeader($headerFeedTag);
                 if ("" != $headerFeedTagUrl)
                     $result['feedLinks'][] = $headerFeedTagUrl;
             }
         }
-        
+
         return $result;
     }
 }

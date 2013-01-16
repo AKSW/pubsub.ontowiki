@@ -1,4 +1,10 @@
 <?php
+/**
+ * This file is part of the {@link http://ontowiki.net OntoWiki} project.
+ *
+ * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
 
 class PubSubHubbub_Subscription
     extends Zend_Feed_Pubsubhubbub_Model_ModelAbstract
@@ -17,8 +23,8 @@ class PubSubHubbub_Subscription
         'expiration_time' => 'expirationTime',
         'subscription_state' => 'subscriptionState'
     );
-    
-    public function __construct ($subscriptionModelInstance, $subscriptionConfig) 
+
+    public function __construct ($subscriptionModelInstance, $subscriptionConfig)
     {
         // avoid Zend table init
         $this->_subscriptionConfig = $subscriptionConfig;
@@ -35,7 +41,7 @@ class PubSubHubbub_Subscription
     {
         return $classUri . substr($id, 0, 10);
     }
-    
+
     /**
      * function generate the statements array
      * @param $subscriptionResourceUri
@@ -47,8 +53,7 @@ class PubSubHubbub_Subscription
         $addStatements = array();
         $deleteStatements = array();
         $addStatements[$subscriptionResourceUri] = array();
-        if (!isset($subscriptionResourceProperties))
-        {
+        if (!isset($subscriptionResourceProperties)) {
             $addStatements[$subscriptionResourceUri]['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'] = array();
             $addStatements[$subscriptionResourceUri]['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'][]
                 = array(
@@ -56,17 +61,22 @@ class PubSubHubbub_Subscription
                     'type' => 'uri'
                 );
         }
-        foreach ($data as $dataKey => $dataValue)
-        {
+        foreach ($data as $dataKey => $dataValue) {
             if (isset($dataValue) &&
                 (!isset($subscriptionResourceProperties) ||
                     (
-                        isset($subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content']) &&
-                        $dataValue != $subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content']
+                        isset(
+                            $subscriptionResourceProperties[$this->_subscriptionConfig->get(
+                                $this->_propertyMatching[$dataKey]
+                            )][0]['content']
+                        ) &&
+                        $dataValue != $subscriptionResourceProperties
+                            [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])]
+                            [0]
+                            ['content']
                     )
                 )
-            )
-            {
+            ) {
                 $addStatements[$subscriptionResourceUri]
                     [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])] = array(
                         array(
@@ -76,30 +86,40 @@ class PubSubHubbub_Subscription
                     );
                 if (isset($subscriptionResourceProperties) &&
                     (
-                        isset($subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content']) &&
-                        $dataValue != $subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content']
+                        isset(
+                            $subscriptionResourceProperties
+                                [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])]
+                                [0]
+                                ['content']
+                            ) &&
+                        $dataValue != $subscriptionResourceProperties
+                            [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])]
+                            [0]
+                            ['content']
                     )
-                )
-                {
+                ) {
                     if (0 == count($deleteStatements))
                         $deleteStatements[$subscriptionResourceUri] = array();
                     $deleteStatements[$subscriptionResourceUri]
                     [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])] = array(
                         array(
-                        'value' => $subscriptionResourceProperties[$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])][0]['content'],
+                        'value' => $subscriptionResourceProperties
+                            [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])]
+                            [0]
+                            ['content'],
                         'type' => 'literal'
                         )
                     );
                 }
             }
         }
-        
+
         $returnArray = array();
         $returnArray['addStatements'] = $addStatements;
         $returnArray['deleteStatements'] = $deleteStatements;
         return $returnArray;
     }
-    
+
     /**
      */
     public function setSubscription(array $data)
@@ -110,24 +130,24 @@ class PubSubHubbub_Subscription
                 'ID must be set before attempting a save'
             );
         }
-        
+
         // generate uri with topic_url and hub_url
         $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
             $this->_subscriptionConfig->get('classUri'),
             $data['id']
         );
-        
-        $subscriptionResource = new OntoWiki_Model_Resource (
+
+        $subscriptionResource = new OntoWiki_Model_Resource(
             $this->_subscriptionModelInstance->getStore(),
             $this->_subscriptionModelInstance,
             $subscriptionResourceUri
-         );
-        
+        );
+
         $subscriptionResourceProperties = $subscriptionResource->getValues();
-        
-        if (0 < count($subscriptionResourceProperties))
-        {
-            $subscriptionResourceProperties = $subscriptionResourceProperties[$this->_subscriptionModelInstance->getModelIri()];
+
+        if (0 < count($subscriptionResourceProperties)) {
+            $subscriptionResourceProperties = $subscriptionResourceProperties
+                [$this->_subscriptionModelInstance->getModelIri()];
             $data['created_time'] = $subscriptionResourceProperties
                 [$this->_subscriptionConfig->get($this->_propertyMatching['created_time'])][0]['content'];
             $now = new Zend_Date;
@@ -146,7 +166,7 @@ class PubSubHubbub_Subscription
 
             return true;
         }
-        
+
         // old implementation
         /*
         $result = $this->_db->find($data['id']);
@@ -178,48 +198,48 @@ class PubSubHubbub_Subscription
     {
         if (empty($key) || !is_string($key)) {
             require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
-            throw new Zend_Feed_Pubsubhubbub_Exception('Invalid parameter "key"'
-                .' of "' . $key . '" must be a non-empty string');
+            throw new Zend_Feed_Pubsubhubbub_Exception(
+                'Invalid parameter "key"' .
+                ' of "' .
+                $key .
+                '" must be a non-empty string'
+            );
         }
-        
+
         // generate uri with topic_url and hub_url
         $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
             $this->_subscriptionConfig->get('classUri'),
             $key
         );
-        
-        $subscriptionResource = new OntoWiki_Model_Resource (
+
+        $subscriptionResource = new OntoWiki_Model_Resource(
             $this->_subscriptionModelInstance->getStore(),
             $this->_subscriptionModelInstance,
             $subscriptionResourceUri
-         );
-        
+        );
+
         $subscriptionResourceProperties = $subscriptionResource->getValues();
 
-        if (0 < count($subscriptionResourceProperties))
-        {
-            $subscriptionResourceProperties = $subscriptionResourceProperties[$this->_subscriptionModelInstance->getModelIri()];
+        if (0 < count($subscriptionResourceProperties)) {
+            $subscriptionResourceProperties = $subscriptionResourceProperties
+                [$this->_subscriptionModelInstance->getModelIri()];
             $data = array();
-            foreach ($this->_propertyMatching as $dataKey => $propertyKey)
-            {
+            foreach ($this->_propertyMatching as $dataKey => $propertyKey) {
                 $propertyArray = isset($subscriptionResourceProperties
                     [$this->_subscriptionConfig->get($propertyKey)]) ?
                     $subscriptionResourceProperties[$this->_subscriptionConfig->get($propertyKey)] :
                    null;
-                
-                if (isset($propertyArray) && "" != $propertyArray[0]['content'])
-                {
+
+                if (isset($propertyArray) && "" != $propertyArray[0]['content']) {
                     $data[$dataKey] = $propertyArray[0]['content'];
-                }
-                else
-                {
+                } else {
                     $data[$dataKey] = null;
                 }
             }
             return $data;
         }
         return false;
-    
+
         // old implementation
         /*
         $result = $this->_db->find($key);
@@ -239,28 +259,32 @@ class PubSubHubbub_Subscription
     {
         if (empty($key) || !is_string($key)) {
             require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
-            throw new Zend_Feed_Pubsubhubbub_Exception('Invalid parameter "key"'
-                .' of "' . $key . '" must be a non-empty string');
+            throw new Zend_Feed_Pubsubhubbub_Exception(
+                'Invalid parameter "key"' .
+                ' of "' .
+                $key .
+                '" must be a non-empty string'
+            );
         }
         // generate uri with topic_url and hub_url
         $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
             $this->_subscriptionConfig->get('classUri'),
             $key
         );
-        
-        $subscriptionResource = new OntoWiki_Model_Resource (
+
+        $subscriptionResource = new OntoWiki_Model_Resource(
             $this->_subscriptionModelInstance->getStore(),
             $this->_subscriptionModelInstance,
             $subscriptionResourceUri
-         );
-        
+        );
+
         $subscriptionResourceProperties = $subscriptionResource->getValues();
 
         if (0 < count($subscriptionResourceProperties))
             return true;
         else
             return false;
-        
+
         // old implementation
         /*
         $result = $this->_db->find($key);
@@ -280,25 +304,29 @@ class PubSubHubbub_Subscription
     {
         if (empty($key) || !is_string($key)) {
             require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
-            throw new Zend_Feed_Pubsubhubbub_Exception('Invalid parameter "key"'
-                .' of "' . $key . '" must be a non-empty string');
+            throw new Zend_Feed_Pubsubhubbub_Exception(
+                'Invalid parameter "key"' .
+                ' of "' .
+                $key .
+                '" must be a non-empty string'
+            );
         }
-        if(true == $this->hasSubscription($key)) {
+        if (true == $this->hasSubscription($key)) {
             // generate uri with topic_url and hub_url
             $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
                 $this->_subscriptionConfig->get('classUri'),
                 $key
             );
-            
+
             $this->_subscriptionModelInstance->deleteMatchingStatements(
-                    $subscriptionResourceUri,
-                    null,
-                    null
-                );
+                $subscriptionResourceUri,
+                null,
+                null
+            );
             return true;
         }
         return false;
-    
+
         // old implementation
         /*
         $result = $this->_db->find($key);
@@ -331,13 +359,13 @@ class PubSubHubbub_Subscription
             );
         $this->_subscriptionModelInstance->addMultipleStatements($addStatements);
     }
-    
+
     /**
      * get the topic url for a given resource uri
      */
     public function getTopicByResourceUri($resourceUri)
     {
-        $results = $this->_subscriptionModelInstance->sparqlQuery (
+        $results = $this->_subscriptionModelInstance->sparqlQuery(
             'SELECT ?topicUrl
             WHERE {
               ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .

@@ -1,24 +1,30 @@
 <?php
+/**
+ * This file is part of the {@link http://ontowiki.net OntoWiki} project.
+ *
+ * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
 
 class PubsubController extends OntoWiki_Controller_Component
 {
     protected $_subscriptionModelInstance;
-    
+
     public function init()
     {
         parent::init();
-        
+
         //ToDo: Quickfix because of Error:
         //Use of undefined constant OW_SHOW_MAX - assumed 'OW_SHOW_MAX'
         if (!defined('OW_SHOW_MAX'))
-            define ('OW_SHOW_MAX', 5);
-            
+            define('OW_SHOW_MAX', 5);
+
         // Zend_Loader for class autoloading
         $loader = Zend_Loader_Autoloader::getInstance();
         $loader->registerNamespace('PubSubHubbub_');
 
         $path = __DIR__;
-		set_include_path(
+        set_include_path(
             get_include_path() .
             PATH_SEPARATOR .
             $path .
@@ -34,9 +40,9 @@ class PubsubController extends OntoWiki_Controller_Component
             $this->_owApp->erfurt->getStore()
         );
         $this->_subscriptionModelInstance = $subscriptionHelper->addModel();
-        
+
     }
-    
+
     /**
      * Index Action
      */
@@ -44,10 +50,8 @@ class PubsubController extends OntoWiki_Controller_Component
     {
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
-        
-        
     }
-    
+
     /**
      * Subsription Action
      */
@@ -55,24 +59,23 @@ class PubsubController extends OntoWiki_Controller_Component
     {
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
-        
+
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
-        
+
         $subscriptionStorage = new PubSubHubbub_Subscription(
             $this->_subscriptionModelInstance,
             $this->_privateConfig->get('subscriptions')
         );
-        
+
         $hubUrl = $this->getParam('hubUrl');
         $topicUrl = $this->getParam('topicUrl');
         $callBackUrl = $this->getParam('callBackUrl');
         $subscriptionMode = $this->getParam('subscriptionMode');
         $verifyMode = $this->getParam('verifyMode');
         $sourceResource = $this->getParam('sourceResource');
-        
-        if ("" != $hubUrl && "" != $topicUrl && "" != $callBackUrl)
-        {
+
+        if ("" != $hubUrl && "" != $topicUrl && "" != $callBackUrl) {
             $subscriber = new PubSubHubbub_Subscriber;
             $subscriber->setStorage($subscriptionStorage);
             $subscriber->addHubUrl($hubUrl);
@@ -81,16 +84,13 @@ class PubsubController extends OntoWiki_Controller_Component
             $subscriber->setPreferredVerificationMode($verifyMode);
 
             // check subscribtion mode
-            if ("subscribe" == $subscriptionMode)
-            {
+            if ("subscribe" == $subscriptionMode) {
                 $subscriber->subscribeAll();
                 if ("" != $sourceResource)
                     $subscriber->addSourceResourceUri($sourceResource);
-            }
-            else if ("unsubscribe" == $subscriptionMode)
+            } else if ("unsubscribe" == $subscriptionMode)
                 $subscriber->unsubscribeAll();
-            else
-            {
+            else {
                 echo 'FAILURE: missing parameter';
                 $this->_response->setHttpResponseCode(500);
                 return;
@@ -100,18 +100,17 @@ class PubsubController extends OntoWiki_Controller_Component
                 $this->_response->setBody('')
                      ->setHttpResponseCode(200);
             else {
-                foreach ($subscriber->getErrors() as $error)
-                {
-                    $this->_response->appendBody(var_dump($error));
+                foreach ($subscriber->getErrors() as $error) {
+                    $this->_response->appendBody($error);
                 }
                 $this->_response->setHttpResponseCode(404);
-                
+
             }
         } else {
             echo 'FAILURE: wrong Urls';
         }
     }
-    
+
     /**
      * Callback Action
      */
@@ -121,13 +120,13 @@ class PubsubController extends OntoWiki_Controller_Component
             $_SERVER['REQUEST_METHOD'] = 'post';
         else
             $_SERVER['REQUEST_METHOD'] = 'get';
-        
+
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
-        
+
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
-        
+
         $subscriptionStorage = new PubSubHubbub_Subscription(
             $this->_subscriptionModelInstance,
             $this->_privateConfig->get('subscriptions')
@@ -136,7 +135,7 @@ class PubsubController extends OntoWiki_Controller_Component
         $callback->setStorage($subscriptionStorage);
 
         $callback->handle($this->_request->getParams());
-        
+
         $callback->sendResponse();
     }
     

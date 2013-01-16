@@ -1,4 +1,10 @@
 <?php
+/**
+ * This file is part of the {@link http://ontowiki.net OntoWiki} project.
+ *
+ * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
 
 class PubSubHubbub_Subscriber_Callback
     extends Zend_Feed_Pubsubhubbub_Subscriber_Callback
@@ -15,7 +21,7 @@ class PubSubHubbub_Subscriber_Callback
     public function handle(array $httpGetData = null, $sendResponseNow = false)
     {
         if ($httpGetData === null) {
-            $httpGetData = $_GET;
+            $httpGetData = Zend_Controller_Front::getInstance()->getRequest();
         }
 
         /**

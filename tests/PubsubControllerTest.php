@@ -1,8 +1,15 @@
 <?php
+/**
+ * This file is part of the {@link http://ontowiki.net OntoWiki} project.
+ *
+ * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'TestHelper.php';
 
 /**
- * 
+ *
  */
 class PubsubControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
 {
@@ -12,9 +19,9 @@ class PubsubControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
             'default',
             ONTOWIKI_ROOT . 'application/config/application.ini'
         );
-        
+
         parent::setUp();
-        
+
         $this->request
             ->setPost(
                 array(
@@ -24,10 +31,10 @@ class PubsubControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
                     'login-save' => 'on'
                 )
             );
-            
-        // Excute request  
+
+        // Excute request
         $this->dispatch('/application/login');
-        
+
     }
 
     /**
@@ -35,30 +42,30 @@ class PubsubControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
      */
     public function subscription()
     {
-
-        
         $this->request
             ->setPost(
                 array(
                     'hubUrl' => 'http://localhost:8080/subscribe',
-                    'topicUrl' => 'http://localhost:8081/atom/stream/eugene',
+                    'topicUrl' => 'http://www.pshb.local/history/feed/?r=http%3A%2F%2F' .
+                                  'www.pshb.local%2Fpubsub%2Fresourcewithfeed',
                     'callBackUrl' => 'http://www.pshb.local/pubsub/callback',
                     'subscriptionMode' => 'subscribe',
-                    'verifyMode' => 'sync'
+                    'verifyMode' => 'sync',
+                    'sourceResource' => 'http://www.pshb.local/pubsub/resourcewithfeed'
                 )
             );
 
-        // Excute request  
+        // Excute request
         $this->dispatch('/pubsub/subscription');
-        
+
         // Check response
         $this->assertResponseCode(
             200,
             "" == $this->response->getBody() ? null : $this->response->getBody()
         );
-        
+
     }
-    
+
     /**
      * @1test
      */
@@ -76,18 +83,18 @@ class PubsubControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
                 )
             );
 
-        // Excute request  
+        // Excute request
         $this->dispatch('/pubsub/callback');
-        
+
         // Check response
         $this->assertResponseCode(
             200,
             "" == $this->response->getBody() ? null : $this->response->getBody()
         );
     }
-    
+
     /**
-     * @test
+     * @1test
      */
     public function unSubscription()
     {
@@ -95,21 +102,22 @@ class PubsubControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
             ->setPost(
                 array(
                     'hubUrl' => 'http://localhost:8080/subscribe',
-                    'topicUrl' => 'http://localhost:8081/atom/stream/eugene',
+                    'topicUrl' => 'http://www.pshb.local/history/feed/?r=http%3A%2F%2F' .
+                                  'www.pshb.local%2Fpubsub%2Fresourcewithfeed',
                     'callBackUrl' => 'http://www.pshb.local/pubsub/callback',
                     'subscriptionMode' => 'unsubscribe',
                     'verifyMode' => 'sync'
                 )
             );
 
-        // Excute request  
+        // Excute request
         $this->dispatch('/pubsub/subscription');
-        
+
         // Check response
         $this->assertResponseCode(
             200,
             "" == $this->response->getBody() ? null : $this->response->getBody()
         );
-        
+
     }
 }

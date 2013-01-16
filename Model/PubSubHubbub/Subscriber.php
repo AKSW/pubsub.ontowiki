@@ -1,4 +1,10 @@
 <?php
+/**
+ * This file is part of the {@link http://ontowiki.net OntoWiki} project.
+ *
+ * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
 
 class PubSubHubbub_Subscriber
     extends Zend_Feed_Pubsubhubbub_Subscriber
@@ -15,8 +21,11 @@ class PubSubHubbub_Subscriber
     {
         if (!in_array($mode, array('subscribe', 'unsubscribe'))) {
             require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
-            throw new Zend_Feed_Pubsubhubbub_Exception('Invalid mode specified: "'
-                . $mode . '" which should have been "subscribe" or "unsubscribe"');
+            throw new Zend_Feed_Pubsubhubbub_Exception(
+                'Invalid mode specified: "' .
+                $mode .
+                '" which should have been "subscribe" or "unsubscribe"'
+            );
         }
 
         $params = array(
@@ -38,7 +47,7 @@ class PubSubHubbub_Subscriber
             );
         }
         $params['hub.verify'] = array();
-        foreach($vmodes as $vmode) {
+        foreach ($vmodes as $vmode) {
             $params['hub.verify'][] = $vmode;
         }
 
@@ -84,7 +93,9 @@ class PubSubHubbub_Subscriber
             'verify_token'       => hash('sha256', $params['hub.verify_token']),
             'secret'             => null,
             'expiration_time'    => $expires,
-            'subscription_state' => ($mode == 'unsubscribe')? Zend_Feed_Pubsubhubbub::SUBSCRIPTION_TODELETE : Zend_Feed_Pubsubhubbub::SUBSCRIPTION_NOTVERIFIED,
+            'subscription_state' => ($mode == 'unsubscribe')?
+                                    Zend_Feed_Pubsubhubbub::SUBSCRIPTION_TODELETE :
+                                    Zend_Feed_Pubsubhubbub::SUBSCRIPTION_NOTVERIFIED,
         );
         $this->getStorage()->setSubscription($data);
 
@@ -92,14 +103,14 @@ class PubSubHubbub_Subscriber
             $this->_urlEncode($params)
         );
     }
-    
+
     /**
      * function save the resource uri to the subscription
      */
     public function addSourceResourceUri($resourceUri)
     {
         $hubs = $this->getHubUrls();
-        
+
         foreach ($hubs as $hubUrl) {
             $params = array(
                 'hub.topic' => $this->getTopicUrl(),
