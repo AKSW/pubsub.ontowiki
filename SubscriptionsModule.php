@@ -18,6 +18,7 @@ class SubscriptionsModule extends OntoWiki_Module
 {
     protected $_subscriptionModelInstance;
     protected $_subscriptionStorage;
+    protected $_headerFeedTags;
     
     /**
      * Constructor
@@ -38,6 +39,15 @@ class SubscriptionsModule extends OntoWiki_Module
             DIRECTORY_SEPARATOR .
             PATH_SEPARATOR
         );
+        
+        // get header feed tags from config
+        $headerFeedTags = $this->_privateConfig->get('subscriptions')->get('headerFeedTags');
+        if (is_object($headerFeedTags))
+            $headerFeedTags = $headerFeedTags->toArray();
+        else
+            $headerFeedTags = array($headerFeedTags);
+        $this->_headerFeedTags = $headerFeedTags;
+        
         // create model if it does not exist
         $subscriptionHelper = new PubSubHubbub_ModelHelper(
             $this->_privateConfig->get('subscriptions')->get('modelUri'),
@@ -63,19 +73,40 @@ class SubscriptionsModule extends OntoWiki_Module
 
     public function getContents()
     {
-        $headerFeedTags = $this->_privateConfig->get('subscriptions')->get('headerFeedTags');
-        if (is_object($headerFeedTags))
-            $headerFeedTags = $headerFeedTags->toArray();
-        else
-            $headerFeedTags = array($headerFeedTags);
-        $this->view->headerFeedTags = $headerFeedTags;
-        
-        $this->view->topicUrl = $this->_subscriptionStorage->getTopicByResourceUri($this->_owApp->selectedResource);
+        $this->view->selectedResourceUri = $this->_owApp->selectedResource->getUri();
+        $this->view->uriStatus = $this->_getUriStatus($this->_owApp->selectedResource);
+        $this->view->topicUrl = $this->_subscriptionStorage->getTopicByResourceUri($this->_owApp->selectedResource->getUri());
         
         $this->view->standardHubUrl = $this->_privateConfig->get('subscriptions')->get('standardHubUrl');
         $this->view->callbackUrl = $this->_privateConfig->get('subscriptions')->get('callbackUrl');
 
         return $this->render('pubsub/subscriptions');
+    }
+    
+    private function _getUriStatus($resource)
+    {
+        $result = array();
+        $result['isLinkedData'] = false;
+        
+        // check for LinkedData
+        $wrapper = new Erfurt_Wrapper_LinkeddataWrapper();
+        $result['isLinkedData'] = $wrapper->isAvailable($resource, '');
+        $result['feedLinks'] = array();
+        if ($result['isLinkedData'])
+        {
+            // check for header tags
+            $httpClient = Erfurt_App::getInstance()->getHttpClient($resource->getUri());
+            $httpClient->setHeaders('Accept', 'application/rdf+xml');
+            
+            foreach ($this->_headerFeedTags as $headerFeedTag)
+            {
+                $headerFeedTagUrl = $httpClient->request()->getHeader($headerFeedTag);
+                if ("" != $headerFeedTagUrl)
+                    $result['feedLinks'][] = $headerFeedTagUrl;
+            }
+        }
+        
+        return $result;
     }
 }
 
