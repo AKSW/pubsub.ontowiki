@@ -3,41 +3,45 @@
     var standardHubUrl = '<?php echo $this->standardHubUrl; ?>';
     var callbackUrl = '<?php echo $this->callbackUrl; ?>';
     var topicUrl = '<?php echo false === $this->topicUrl ? '' : $this->topicUrl; ?>';
-    var uriStatus = '<?php echo json_encode($this->uriStatus); ?>';
-    uriStatus = jQuery.parseJSON(uriStatus);
+    var headerFeedTags = '<?php echo json_encode($this->headerFeedTags); ?>';
+    headerFeedTags = jQuery.parseJSON(headerFeedTags);
 
     $(document).ready(function(){
-        if (uriStatus.isLinkedData)
+        if ('' != topicUrl)
         {
-            $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn(800,function(){
-                if ('' != topicUrl)
-                {
-                    $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
+            $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
+            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+                subscribe(topicUrl, 'subscribe');
+            });
+            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+                subscribe(topicUrl, 'unsubscribe');
+            });
+        }
+        else
+        {
+            $.ajax({
+                url: urlBase + 'resource/head/',
+                data: {r : selectedResource.URI, noredirect: true}
+            }).error(function ( xhr ) {
+                console.log(xhr);
+                $('#pubsub-subscriptions-msgBoxNotLinkedData').fadeIn('slow');
+            }).done(function ( data, textStatus, jqXHR ) {
+            }).success(function ( data, textStatus, jqXHR ) {
+                data = $.parseJSON(data);
+                $.ajax({
+                    url: data[headerFeedTags[0]],
+                    type: 'xml'
+                }).error(function ( xhr ) {
+                    console.log(xhr);
+                }).success(function ( data, textStatus, jqXHR ) {
+                    $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
                     $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                        subscribe(topicUrl, 'subscribe');
+                        subscribe(data.baseURI, 'subscribe');
                     });
                     $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                        subscribe(topicUrl, 'unsubscribe');
+                        subscribe(data.baseURI, 'unsubscribe');
                     });
-                }
-                else
-                {
-                    $.each( uriStatus.feedLinks, function( key, value ) {
-                        $.ajax({
-                            url: value
-                        }).error(function ( xhr ) {
-                            console.log(xhr);
-                        }).success(function ( data, textStatus, jqXHR ) {
-                            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                                subscribe(data.baseURI, 'subscribe');
-                            });
-                            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                                subscribe(data.baseURI, 'unsubscribe');
-                            });
-                        });
-                    });
-                }
+                });
             });
         }
     });

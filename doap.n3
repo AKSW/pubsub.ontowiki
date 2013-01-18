@@ -37,8 +37,7 @@
     :secret "http://localhost/PubSub/secret/" ;
     :expirationTime "http://localhost/PubSub/expirationTime/" ;
     :subscriptionState "http://localhost/PubSub/subscriptionState/" ;
-    :headerFeedTags "Link";
-    :headerFeedTags "X-Link".
+    :headerFeedTags "link".
 
 :Subscriptions a owconfig:Module ;
   rdfs:label "Subscriptions" ;
