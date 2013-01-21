@@ -205,4 +205,25 @@ class PubsubController extends OntoWiki_Controller_Component
         else
             $this->_response->appendBody(json_encode(false));
     }
+    
+    public function existsfeedupdatesAction()
+    {
+        // disable layout for Ajax requests
+        $this->_helper->layout()->disableLayout();
+        // disable rendering
+        $this->_helper->viewRenderer->setNoRender();
+        
+        $subscriptionId = $this->_request->getParam('xhub_subscription');
+        
+        $cacheFiles = scandir($this->_owApp->erfurt->getCacheDir());
+        
+        foreach ($cacheFiles as $filename) {
+            if(false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')){
+                echo "true";
+                return;
+            }
+        }
+        echo "false";
+        return;
+    }
 }
