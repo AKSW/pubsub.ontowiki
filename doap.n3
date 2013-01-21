@@ -19,6 +19,7 @@
   owconfig:templates "templates" ;
   owconfig:hasModule :Subscriptions ;
   doap:release :v1-0 ;
+  owconfig:pluginEvent event:onFeedUpdate ;
   owconfig:config :SubscriptionConfig .
   
 :SubscriptionConfig a owconfig:Config;

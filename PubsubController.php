@@ -158,6 +158,10 @@ class PubsubController extends OntoWiki_Controller_Component
 			fwrite($fh, $callback->getFeedUpdate() . "\n");
 			chmod ($filePath, 0755);
 			fclose($fh);
+            
+            $event = new Erfurt_Event('onFeedUpdate');
+            $event->xhubSubscription = $this->_request->getParam('xhub_subscription');
+            $event->trigger();
 		}
 
     }
