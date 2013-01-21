@@ -39,27 +39,36 @@
                     }).done(function ( data, textStatus, jqXHR ) {
                     }).success(function ( data, textStatus, jqXHR ) {
                         data = $.parseJSON(data);
-                        $.ajax({
-                            url: data[headerFeedTags[0]],
-                            type: 'xml'
-                        }).error(function ( xhr ) {
-                            console.log(xhr);
-                        }).success(function ( data, textStatus, jqXHR ) {
-                            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                                subscribe(data.baseURI, 'subscribe');
+                        data = arrayKeysToUpper(data);
+                        if (undefined !== data[headerFeedTags[0]])
+                        {
+                            $.ajax({
+                                url: data[headerFeedTags[0]],
+                                type: 'xml'
+                            }).error(function ( xhr ) {
+                                console.log(xhr);
+                            }).success(function ( data, textStatus, jqXHR ) {
+                                $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+                                $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+                                    subscribe(data.baseURI, 'subscribe');
+                                });
+                                $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+                                    subscribe(data.baseURI, 'unsubscribe');
+                                });
                             });
-                            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                                subscribe(data.baseURI, 'unsubscribe');
-                            });
-                        });
+                        }
                     });
                 }
             });
         }
     });
     
-   
+function arrayKeysToUpper(data) {
+    for ( var index in data) {
+        data[index.toLowerCase()] = data[index];
+    }
+    return data;
+}
 function subscribe(topicUrl, mode) {
     $.ajax({
         url: urlBase + 'pubsub/subscription',
