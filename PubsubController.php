@@ -155,17 +155,22 @@ class PubsubController extends OntoWiki_Controller_Component
         
         if ("" != $resourceUri)
         {
-            $resource = new Erfurt_Rdf_Resource($resourceUri);
-            // check for LinkedData
-            $wrapper = new Erfurt_Wrapper_LinkeddataWrapper();
-            try {
-                $result = $wrapper->isAvailable($resource, '');
+            if (false === strpos($resourceUri, $this->_owApp->getUrlBase()))
+            {
+                $resource = new Erfurt_Rdf_Resource($resourceUri);
+                // check for LinkedData
+                $wrapper = new Erfurt_Wrapper_LinkeddataWrapper();
+                try {
+                    $result = $wrapper->isAvailable($resource, '');
+                }
+                catch (Exception $e){
+                    $this->_response->appendBody(json_encode($e->getMessage()));
+                    $this->_response->setHttpResponseCode(404);
+                    return;
+                }
             }
-            catch (Exception $e){
-                $this->_response->appendBody(json_encode($e->getMessage()));
-                $this->_response->setHttpResponseCode(404);
-                return;
-            }
+            else
+                $result = true;
         }
         
         if ($result === true)
