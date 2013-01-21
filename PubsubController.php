@@ -135,8 +135,31 @@ class PubsubController extends OntoWiki_Controller_Component
         $callback->setStorage($subscriptionStorage);
 
         $callback->handle($this->_request->getParams());
-
+        
+        // response to hub immediatly to avoid blocking the hub
         $callback->sendResponse();
+        
+        if( true === $callback->hasFeedUpdate() ) {
+            $filePath = $this->_owApp->erfurt->getCacheDir() .
+                        "pubsub_" .
+                        $this->_request->getParam('xhub_subscription') .
+                        "_" .
+                        time() .
+                        ".xml";
+            
+            if ( false === ( $fh = fopen($filePath, 'w') ) ) {
+                // can't open the file
+                $m = "No write permissions for ". $filePath;
+                throw new CubeViz_Exception ( $m );
+                return $m;
+            }
+            
+            // write all parameters line by line
+			fwrite($fh, $callback->getFeedUpdate() . "\n");
+			chmod ($filePath, 0755);
+			fclose($fh);
+		}
+
     }
     
     /*
