@@ -9,7 +9,6 @@
     $(document).ready(function(){
         $("#pubsub-subscriptions-msgBoxNewFeedUpdates").hide();
         $('#subscriptions').hide();
-        console.log(topicUrl);
         
         if ('' != topicUrl)
         {
@@ -34,6 +33,21 @@
                 // If there are new feed updates (related files in cache folder)
                 if("true" == data) {
                     $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeIn("slow");
+                    
+                    /**
+                     * Set click event for button to import feed updates
+                     */
+                    $('#pubsub-subscriptions-buttonImportFeedUpdates').click(function(){
+                        $.ajax({
+                            url: urlBase + 'pubsub/importfeedupdates/',
+                            data: {r : selectedResource.URI}
+                        }).error(function ( xhr ) {
+                        }).done(function ( data, textStatus, jqXHR ) {
+                        }).success(function ( data, textStatus, jqXHR ){
+                            console.log("importfeedupdates");
+                            console.log(data);
+                        });
+                    });
                 }
             });
         }
@@ -61,18 +75,19 @@
                         data = arrayKeysToUpper(data);
                         if (undefined !== data[headerFeedTags[0]])
                         {
+                            var subscriptionTopicUrl = data[headerFeedTags[0]];
                             $.ajax({
-                                url: data[headerFeedTags[0]],
-                                type: 'xml'
+                                url: subscriptionTopicUrl,
+                                datatype: 'xml'
                             }).error(function ( xhr ) {
                                 console.log(xhr);
                             }).success(function ( data, textStatus, jqXHR ) {
                                 $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
                                 $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                                    subscribe(data.baseURI, 'subscribe');
+                                    subscribe(subscriptionTopicUrl, 'subscribe');
                                 });
                                 $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                                    subscribe(data.baseURI, 'unsubscribe');
+                                    subscribe(subscriptionTopicUrl, 'unsubscribe');
                                 });
                             });
                         }

@@ -101,7 +101,7 @@ class PubsubController extends OntoWiki_Controller_Component
                      ->setHttpResponseCode(200);
             else {
                 foreach ($subscriber->getErrors() as $error) {
-                    $this->_response->appendBody($error);
+                    $this->_response->appendBody(var_dump($error));
                 }
                 $this->_response->setHttpResponseCode(404);
 
@@ -235,6 +235,40 @@ class PubsubController extends OntoWiki_Controller_Component
         
         echo "false";
         return;
+    }
+    
+    public function importfeedupdatesAction()
+    {
+        // disable layout for Ajax requests
+        $this->_helper->layout()->disableLayout();
+        // disable rendering
+        $this->_helper->viewRenderer->setNoRender();
+        
+        $r = $this->_request->getParam('r');
+        
+        $subscriptionStorage = new PubSubHubbub_Subscription(
+            $this->_subscriptionModelInstance,
+            $this->_privateConfig->get('subscriptions')
+        );
+        
+        $subscriptionId = $subscriptionStorage->getSubscriptionIdByResourceUri($r);
+        
+        if(false !== $subscriptionId) {
+            $cacheFolder = $this->_owApp->erfurt->getCacheDir();
+            $cacheFiles = scandir($cacheFolder);
+            
+            foreach ($cacheFiles as $filename) {
+                if(false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')){
+                    
+                    $feed = Zend_Feed_Reader::importFile($cacheFolder .'/'. $filename);
+                    
+                    /**
+                     * Proceed feed
+                     */
+                    echo "\n$filename: ". $feed->count();
+                }
+            }
+        }
     }
     
     /**
