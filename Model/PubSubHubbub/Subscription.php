@@ -377,4 +377,22 @@ class PubSubHubbub_Subscription
         else
             return false;
     }
+    
+    /**
+     * get the topic url for a given resource uri
+     */
+    public function getSubscriptionIdByResourceUri($resourceUri)
+    {
+        $results = $this->_subscriptionModelInstance->sparqlQuery(
+            'SELECT ?subscriptionId
+            WHERE {
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('id') . '> ?subscriptionId .
+            }'
+        );
+        if (0 < count($results))
+            return $results[0]['subscriptionId'];
+        else
+            return false;
+    }
 }
