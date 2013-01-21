@@ -226,4 +226,17 @@ class PubsubController extends OntoWiki_Controller_Component
         echo "false";
         return;
     }
+    
+    /**
+     * Resource Action
+     */
+    public function resourcewithfeedAction()
+    {
+        // disable layout for Ajax requests
+        $this->_helper->layout()->disableLayout();
+        // disable rendering
+        $this->_helper->viewRenderer->setNoRender();
+
+        header('Link: http://www.pshb.local/history/feed/?r=http%3A%2F%2Fwww.pshb.local%2Fpubsub%2Fresourcewithfeed');
+    }
 }
