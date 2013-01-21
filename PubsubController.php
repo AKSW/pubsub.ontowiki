@@ -139,4 +139,38 @@ class PubsubController extends OntoWiki_Controller_Component
         $callback->sendResponse();
     }
     
+    /*
+     * check if a uri is LinkedData
+     */
+    
+    public function islinkeddataAction()
+    {
+        // disable layout for Ajax requests
+        $this->_helper->layout()->disableLayout();
+        // disable rendering
+        $this->_helper->viewRenderer->setNoRender();
+        
+        $resourceUri = $this->getParam('r', '');
+        $result = false;
+        
+        if ("" != $resourceUri)
+        {
+            $resource = new Erfurt_Rdf_Resource($resourceUri);
+            // check for LinkedData
+            $wrapper = new Erfurt_Wrapper_LinkeddataWrapper();
+            try {
+                $result = $wrapper->isAvailable($resource, '');
+            }
+            catch (Exception $e){
+                $this->_response->appendBody(json_encode($e->getMessage()));
+                $this->_response->setHttpResponseCode(404);
+                return;
+            }
+        }
+        
+        if ($result === true)
+            $this->_response->appendBody(json_encode($result));
+        else
+            $this->_response->appendBody(json_encode(false));
+    }
 }

@@ -7,6 +7,7 @@
     headerFeedTags = jQuery.parseJSON(headerFeedTags);
 
     $(document).ready(function(){
+        $('#subscriptions').hide();
         if ('' != topicUrl)
         {
             $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
@@ -20,28 +21,40 @@
         else
         {
             $.ajax({
-                url: urlBase + 'resource/head/',
-                data: {r : selectedResource.URI, noredirect: true}
+                url: urlBase + 'pubsub/islinkeddata/',
+                datatype: 'JSON',
+                data: {r : selectedResource.URI}
             }).error(function ( xhr ) {
-                console.log(xhr);
-                $('#pubsub-subscriptions-msgBoxNotLinkedData').fadeIn('slow');
             }).done(function ( data, textStatus, jqXHR ) {
             }).success(function ( data, textStatus, jqXHR ) {
-                data = $.parseJSON(data);
-                $.ajax({
-                    url: data[headerFeedTags[0]],
-                    type: 'xml'
-                }).error(function ( xhr ) {
-                    console.log(xhr);
-                }).success(function ( data, textStatus, jqXHR ) {
-                    $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                    $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                        subscribe(data.baseURI, 'subscribe');
+                if (true == $.parseJSON(data))
+                {
+                    $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
+                    $('#subscriptions').fadeIn('slow');
+                    $.ajax({
+                        url: urlBase + 'resource/head/',
+                        data: {r : selectedResource.URI, noredirect: true}
+                    }).error(function ( xhr ) {
+                        console.log(xhr);
+                    }).done(function ( data, textStatus, jqXHR ) {
+                    }).success(function ( data, textStatus, jqXHR ) {
+                        data = $.parseJSON(data);
+                        $.ajax({
+                            url: data[headerFeedTags[0]],
+                            type: 'xml'
+                        }).error(function ( xhr ) {
+                            console.log(xhr);
+                        }).success(function ( data, textStatus, jqXHR ) {
+                            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+                            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+                                subscribe(data.baseURI, 'subscribe');
+                            });
+                            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+                                subscribe(data.baseURI, 'unsubscribe');
+                            });
+                        });
                     });
-                    $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                        subscribe(data.baseURI, 'unsubscribe');
-                    });
-                });
+                }
             });
         }
     });
@@ -92,12 +105,6 @@ function subscribe(topicUrl, mode) {
     <div class="messagebox search">
         This resource is available as Linked Data, so <strong>you can pull and save</strong>
         the current version of this resource.
-    </div>
-</div>
-
-<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxNotLinkedData">
-    <div class="messagebox error">
-        This resource is not available as Linked Data.
     </div>
 </div>
 
