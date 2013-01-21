@@ -213,16 +213,26 @@ class PubsubController extends OntoWiki_Controller_Component
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
         
-        $subscriptionId = $this->_request->getParam('xhub_subscription');
+        $r = $this->_request->getParam('r');
         
-        $cacheFiles = scandir($this->_owApp->erfurt->getCacheDir());
+        $subscriptionStorage = new PubSubHubbub_Subscription(
+            $this->_subscriptionModelInstance,
+            $this->_privateConfig->get('subscriptions')
+        );
         
-        foreach ($cacheFiles as $filename) {
-            if(false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')){
-                echo "true";
-                return;
+        $subscriptionId = $subscriptionStorage->getSubscriptionIdByResourceUri($r);
+        
+        if(false !== $subscriptionId) {        
+            $cacheFiles = scandir($this->_owApp->erfurt->getCacheDir());
+            
+            foreach ($cacheFiles as $filename) {
+                if(false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')){
+                    echo "true";
+                    return;
+                }
             }
         }
+        
         echo "false";
         return;
     }

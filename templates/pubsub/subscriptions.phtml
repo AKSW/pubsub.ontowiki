@@ -7,15 +7,34 @@
     headerFeedTags = jQuery.parseJSON(headerFeedTags);
 
     $(document).ready(function(){
+        $("#pubsub-subscriptions-msgBoxNewFeedUpdates").hide();
         $('#subscriptions').hide();
+        console.log(topicUrl);
+        
         if ('' != topicUrl)
         {
+            $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
+            $('#subscriptions').fadeIn('slow');
+            
             $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
             $('#pubsub-subscriptions-buttonSubscribe').click(function(){
                 subscribe(topicUrl, 'subscribe');
             });
             $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
                 subscribe(topicUrl, 'unsubscribe');
+            });
+            
+            // check if there are feed updates for the given topic url
+            $.ajax({
+                url: urlBase + 'pubsub/existsfeedupdates/',
+                data: {r : selectedResource.URI}
+            }).error(function ( xhr ) {
+            }).done(function ( data, textStatus, jqXHR ) {
+            }).success(function ( data, textStatus, jqXHR ){
+                // If there are new feed updates (related files in cache folder)
+                if("true" == data) {
+                    $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeIn("slow");
+                }
             });
         }
         else
@@ -142,9 +161,22 @@ function subscribe(topicUrl, mode) {
             </span>
         </a>
     </div>
+    <div class="messagebox info">
+        <strong>You are subscribed</strong> to any updates of this resource.</strong>.
+    </div>
+</div>
+
+<!-- If this resource is not a local resource and a subscription to it already exists -->
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxNewFeedUpdates">
+    <div class="contextmenu">
+        <a class="item" id="pubsub-subscriptions-buttonImportFeedUpdates">
+            <span class="icon icon-toggle-off" title="Import updates">
+                <span>Import updates</span>
+            </span>
+        </a>
+    </div>
     <div class="messagebox success">
-        <strong>You are subscribed</strong> to any updates of this resource.
-        The last update was pushed approx. <strong>10 minutes ago</strong>.
+        <strong>There are new updates for this resource!</strong>.
     </div>
 </div>
 
