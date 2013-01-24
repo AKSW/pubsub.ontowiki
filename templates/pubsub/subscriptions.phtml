@@ -98,13 +98,8 @@
                             $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
                                 subscribe(subscriptionTopicUrl, 'unsubscribe');
                             });
-                            console.log("Test1");
-                            console.log(resourceInformation);
-                            console.log(false == resourceInformation.isLinkedData);
-                            console.log(true == resourceInformation.isLocalResource);
                             if (false == resourceInformation.isLinkedData && true == resourceInformation.isLocalResource)
                             {
-                            console.log("Test2");
                                 $('#pubsub-subscriptions-msgBoxPublish').fadeIn('slow');
                                 $('#pubsub-subscriptions-buttonPublish').click(function(){
                                     $.ajax({
