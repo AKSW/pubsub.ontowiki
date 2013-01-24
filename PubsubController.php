@@ -316,7 +316,8 @@ class PubsubController extends OntoWiki_Controller_Component
                     {
                         $namespaces = $entry->getNamespaces(true);
                         $xhtml = $entry->content->children($namespaces['xhtml']);
-                        $statements[] = json_decode((string) $xhtml->div);
+                        $divContent = json_decode((string) $xhtml->div);
+                        $statements[$divContent->id] = $divContent;
                     }
                 }
             }
@@ -329,6 +330,8 @@ class PubsubController extends OntoWiki_Controller_Component
                     'modeluri'    => $model->getBaseUri(),
                     'resourceuri' => $r
                 );
+                
+                sort($statements);
                 
                 // Start action
                 $versioning->startAction($actionSpec);

@@ -42,11 +42,11 @@
                     $('#pubsub-subscriptions-buttonImportFeedUpdates').click(function(){
                         $.ajax({
                             url: urlBase + 'pubsub/importfeedupdates/',
-                            data: {r : selectedResource.URI}
+                            data: {r : selectedResource.URI},
+                            dataType: 'JSON'
                         }).error(function ( xhr ) {
                         }).done(function ( data, textStatus, jqXHR ) {
                         }).success(function ( data, textStatus, jqXHR ){
-                            data = $.parseJSON(data);
                             if ("true" === data)
                             {
                                 $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeOut("slow");
@@ -108,7 +108,7 @@
                                             hubUrl : standardPublishHubUrl,
                                             topicUrl : subscriptionTopicUrl
                                         },
-                                        datatype: 'JSON'
+                                        dataType: 'JSON'
                                     }).error(function ( xhr ) {
                                         console.log(xhr);
                                     }).success(function ( data, textStatus, jqXHR ) {

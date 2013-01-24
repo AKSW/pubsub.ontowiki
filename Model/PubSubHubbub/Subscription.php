@@ -62,7 +62,7 @@ class PubSubHubbub_Subscription
                 );
         }
         foreach ($data as $dataKey => $dataValue) {
-            if (isset($dataValue) &&
+            if (('resourceProperties' != $dataKey) && isset($dataValue) &&
                 (!isset($subscriptionResourceProperties) ||
                     (
                         isset(
