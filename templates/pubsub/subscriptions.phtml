@@ -44,8 +44,9 @@
                         }).error(function ( xhr ) {
                         }).done(function ( data, textStatus, jqXHR ) {
                         }).success(function ( data, textStatus, jqXHR ){
-                            console.log("importfeedupdates");
-                            console.log(data);
+                            data = $.parseJSON(data);
+                            if ("true" === data)
+                                $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeOut("slow");
                         });
                     });
                 }
