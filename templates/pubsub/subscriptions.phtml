@@ -46,7 +46,10 @@
                         }).success(function ( data, textStatus, jqXHR ){
                             data = $.parseJSON(data);
                             if ("true" === data)
+                            {
                                 $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeOut("slow");
+                                location.reload();
+                            }
                         });
                     });
                 }
@@ -55,45 +58,47 @@
         else
         {
             $.ajax({
-                url: urlBase + 'pubsub/islinkeddata/',
+                url: urlBase + 'pubsub/checkresource/',
                 datatype: 'JSON',
                 data: {r : selectedResource.URI}
             }).error(function ( xhr ) {
             }).done(function ( data, textStatus, jqXHR ) {
             }).success(function ( data, textStatus, jqXHR ) {
-                if (true == $.parseJSON(data))
+                data = $.parseJSON(data);
+                if (true == data.isLinkedData)
                 {
-                    $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
                     $('#subscriptions').fadeIn('slow');
-                    $.ajax({
-                        url: urlBase + 'resource/head/',
-                        data: {r : selectedResource.URI, noredirect: true}
-                    }).error(function ( xhr ) {
-                        console.log(xhr);
-                    }).done(function ( data, textStatus, jqXHR ) {
-                    }).success(function ( data, textStatus, jqXHR ) {
-                        data = $.parseJSON(data);
-                        data = arrayKeysToUpper(data);
-                        if (undefined !== data[headerFeedTags[0]])
-                        {
-                            var subscriptionTopicUrl = data[headerFeedTags[0]];
-                            $.ajax({
-                                url: subscriptionTopicUrl,
-                                datatype: 'xml'
-                            }).error(function ( xhr ) {
-                                console.log(xhr);
-                            }).success(function ( data, textStatus, jqXHR ) {
-                                $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                                $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                                    subscribe(subscriptionTopicUrl, 'subscribe');
-                                });
-                                $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                                    subscribe(subscriptionTopicUrl, 'unsubscribe');
-                                });
-                            });
-                        }
-                    });
+                    $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
                 }
+                $.ajax({
+                    url: urlBase + 'resource/head/',
+                    data: {r : selectedResource.URI, noredirect: true}
+                }).error(function ( xhr ) {
+                    console.log(xhr);
+                }).done(function ( data, textStatus, jqXHR ) {
+                }).success(function ( data, textStatus, jqXHR ) {
+                    data = $.parseJSON(data);
+                    data = arrayKeysToUpper(data);
+                    if (undefined !== data[headerFeedTags[0]])
+                    {
+                        var subscriptionTopicUrl = data[headerFeedTags[0]];
+                        $.ajax({
+                            url: subscriptionTopicUrl,
+                            datatype: 'xml'
+                        }).error(function ( xhr ) {
+                            console.log(xhr);
+                        }).success(function ( data, textStatus, jqXHR ) {
+                            $('#subscriptions').fadeIn('slow');
+                            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+                            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+                                subscribe(subscriptionTopicUrl, 'subscribe');
+                            });
+                            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+                                subscribe(subscriptionTopicUrl, 'unsubscribe');
+                            });
+                        });
+                    }
+                });
             });
         }
     });

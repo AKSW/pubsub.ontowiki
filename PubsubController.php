@@ -177,7 +177,7 @@ class PubsubController extends OntoWiki_Controller_Component
      * check if a uri is LinkedData
      */
     
-    public function islinkeddataAction()
+    public function checkresourceAction()
     {
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
@@ -185,7 +185,12 @@ class PubsubController extends OntoWiki_Controller_Component
         $this->_helper->viewRenderer->setNoRender();
         
         $resourceUri = $this->getParam('r', '');
-        $result = false;
+        $result = array(
+            'isLinkedData' => false,
+            'isLocalResource' => false,
+            'hasError' => false,
+            'errorMessage' => ''
+        );
         
         if ("" != $resourceUri)
         {
@@ -195,22 +200,19 @@ class PubsubController extends OntoWiki_Controller_Component
                 // check for LinkedData
                 $wrapper = new Erfurt_Wrapper_LinkeddataWrapper();
                 try {
-                    $result = $wrapper->isAvailable($resource, '');
+                    $result['isLinkedData'] = $wrapper->isAvailable($resource, '');
                 }
                 catch (Exception $e){
-                    $this->_response->appendBody(json_encode($e->getMessage()));
+                    $result['hasError'] = true;
+                    $result['errorMessage'] = $e->getMessage();
                     $this->_response->setHttpResponseCode(404);
-                    return;
                 }
             }
             else
-                $result = true;
+                $result['isLocalResource'] = true;
         }
         
-        if ($result === true)
-            $this->_response->appendBody(json_encode($result));
-        else
-            $this->_response->appendBody(json_encode(false));
+        $this->_response->appendBody(json_encode($result));
     }
     
     public function existsfeedupdatesAction()
