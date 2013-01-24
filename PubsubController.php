@@ -164,8 +164,10 @@ class PubsubController extends OntoWiki_Controller_Component
 			chmod ($filePath, 0755);
 			fclose($fh);
             
+            // collect all resource properties and attach it to the event object
+            $subscriptionResourceData = $subscriptionStorage->getSubscription($this->_request->getParam('xhub_subscription'));
             $event = new Erfurt_Event('onFeedUpdate');
-            $event->xhubSubscription = $this->_request->getParam('xhub_subscription');
+            $event->subscriptionResourceProperties = $subscriptionResourceData['resourceProperties'];
             $event->trigger();
 		}
 

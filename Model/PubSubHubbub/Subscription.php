@@ -219,11 +219,12 @@ class PubSubHubbub_Subscription
         );
 
         $subscriptionResourceProperties = $subscriptionResource->getValues();
-
+        
         if (0 < count($subscriptionResourceProperties)) {
             $subscriptionResourceProperties = $subscriptionResourceProperties
                 [$this->_subscriptionModelInstance->getModelIri()];
             $data = array();
+            $data['resourceProperties'] = $subscriptionResourceProperties;
             foreach ($this->_propertyMatching as $dataKey => $propertyKey) {
                 $propertyArray = isset($subscriptionResourceProperties
                     [$this->_subscriptionConfig->get($propertyKey)]) ?
