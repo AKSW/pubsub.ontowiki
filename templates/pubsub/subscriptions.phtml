@@ -1,9 +1,11 @@
 <script>
     selectedResource.isLinkedData = false;
+    var standardPublishHubUrl = '<?php echo $this->standardPublishHubUrl; ?>';
     var standardHubUrl = '<?php echo $this->standardHubUrl; ?>';
     var callbackUrl = '<?php echo $this->callbackUrl; ?>';
     var topicUrl = '<?php echo false === $this->topicUrl ? '' : $this->topicUrl; ?>';
     var headerFeedTags = '<?php echo json_encode($this->headerFeedTags); ?>';
+    var resourceInformation = '';
     headerFeedTags = jQuery.parseJSON(headerFeedTags);
 
     $(document).ready(function(){
@@ -64,8 +66,8 @@
             }).error(function ( xhr ) {
             }).done(function ( data, textStatus, jqXHR ) {
             }).success(function ( data, textStatus, jqXHR ) {
-                data = $.parseJSON(data);
-                if (true == data.isLinkedData)
+                resourceInformation = $.parseJSON(data);
+                if (true == resourceInformation.isLinkedData)
                 {
                     $('#subscriptions').fadeIn('slow');
                     $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
@@ -96,6 +98,29 @@
                             $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
                                 subscribe(subscriptionTopicUrl, 'unsubscribe');
                             });
+                            console.log("Test1");
+                            console.log(resourceInformation);
+                            console.log(false == resourceInformation.isLinkedData);
+                            console.log(true == resourceInformation.isLocalResource);
+                            if (false == resourceInformation.isLinkedData && true == resourceInformation.isLocalResource)
+                            {
+                            console.log("Test2");
+                                $('#pubsub-subscriptions-msgBoxPublish').fadeIn('slow');
+                                $('#pubsub-subscriptions-buttonPublish').click(function(){
+                                    $.ajax({
+                                        url: urlBase + 'pubsub/publish/',
+                                        data: {
+                                            hubUrl : standardPublishHubUrl,
+                                            topicUrl : subscriptionTopicUrl
+                                        },
+                                        datatype: 'JSON'
+                                    }).error(function ( xhr ) {
+                                        console.log(xhr);
+                                    }).success(function ( data, textStatus, jqXHR ) {
+                                        $('#pubsub-subscriptions-msgBoxPublish').fadeOut('slow');
+                                    });
+                                });
+                            }
                         });
                     }
                 });
@@ -198,6 +223,20 @@ function subscribe(topicUrl, mode) {
     </div>
     <div class="messagebox success">
         <strong>There are new updates for this resource!</strong>.
+    </div>
+</div>
+
+<!-- If this resource is a local resource then it can be published -->
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxPublish">
+    <div class="contextmenu">
+        <a class="item" id="pubsub-subscriptions-buttonPublish">
+            <span class="icon icon-toggle-off" title="Publish">
+                <span>Publish</span>
+            </span>
+        </a>
+    </div>
+    <div class="messagebox info">
+        <strong>Publish resource updates</strong>.
     </div>
 </div>
 

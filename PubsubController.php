@@ -172,6 +172,45 @@ class PubsubController extends OntoWiki_Controller_Component
 		}
 
     }
+    /**
+     * Publish Action
+     */
+    public function publishAction()
+    {
+        // disable rendering
+        $this->_helper->viewRenderer->setNoRender();
+
+        // disable layout for Ajax requests
+        $this->_helper->layout()->disableLayout();
+
+        $hubUrl = $this->getParam('hubUrl');
+        $topicUrl = $this->getParam('topicUrl');
+        
+        if ("" != $hubUrl && "" != $topicUrl) {
+            $publisher = new Zend_Feed_Pubsubhubbub_Publisher;
+            
+            $publisher->addHubUrl($hubUrl);
+            $publisher->addUpdatedTopicUrl($topicUrl);
+            
+            $publisher->notifyAll();
+     
+            if ($publisher->isSuccess() && 0 == count($publisher->getErrors())) {
+                $this->_response->setBody('')
+                         ->setHttpResponseCode(200);
+            } else {
+                foreach ($publisher->getErrors() as $error) {
+                    $this->_response->appendBody(var_dump($error));
+                }
+                $this->_response->setHttpResponseCode(404);
+            }
+        }
+        else
+        {
+            echo 'FAILURE: missing parameter';
+            $this->_response->setHttpResponseCode(500);
+            return;
+        }
+    }
     
     /*
      * check if a uri is LinkedData

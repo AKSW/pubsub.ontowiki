@@ -42,6 +42,7 @@ class SubscriptionsModule extends OntoWiki_Module
 
         // get header feed tags from config
         $headerFeedTags = $this->_privateConfig->get('subscriptions')->get('headerFeedTags');
+        
         if (is_object($headerFeedTags))
             $headerFeedTags = $headerFeedTags->toArray();
         else
@@ -80,6 +81,8 @@ class SubscriptionsModule extends OntoWiki_Module
         $this->view->headerFeedTags = $this->_headerFeedTags;
         $this->view->standardHubUrl = $this->_privateConfig->get('subscriptions')->get('standardHubUrl');
         $this->view->callbackUrl = $this->_privateConfig->get('subscriptions')->get('callbackUrl');
+        
+        $this->view->standardPublishHubUrl = $this->_privateConfig->get('publish')->get('standardHubUrl');
 
         return $this->render('pubsub/subscriptions');
     }

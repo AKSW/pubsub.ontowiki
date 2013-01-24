@@ -21,7 +21,8 @@
   owconfig:hasModule :Subscriptions ;
   doap:release :v1-0 ;
   owconfig:pluginEvent event:onFeedUpdate ;
-  owconfig:config :SubscriptionConfig .
+  owconfig:config :SubscriptionConfig ;
+  owconfig:config :PublishConfig .
   
 :SubscriptionConfig a owconfig:Config;
     owconfig:id "subscriptions";
@@ -40,6 +41,10 @@
     :expirationTime "http://localhost/PubSub/expirationTime/" ;
     :subscriptionState "http://localhost/PubSub/subscriptionState/" ;
     :headerFeedTags "link".
+    
+:PublishConfig a owconfig:Config;
+    owconfig:id "publish";
+    :standardHubUrl "http://localhost:8080/publish".
 
 :Subscriptions a owconfig:Module ;
   rdfs:label "Subscriptions" ;
