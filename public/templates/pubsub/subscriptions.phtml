@@ -1,0 +1,106 @@
+<script>
+    selectedResource.isLinkedData = false;
+    var standardPublishHubUrl = '<?php echo $this->standardPublishHubUrl; ?>';
+    var standardHubUrl = '<?php echo $this->standardHubUrl; ?>';
+    var callbackUrl = '<?php echo $this->callbackUrl; ?>';
+    var topicUrl = '<?php echo false === $this->topicUrl ? '' : $this->topicUrl; ?>';
+    var headerFeedTags = '<?php echo json_encode($this->headerFeedTags); ?>';
+    var resourceInformation = '';
+    headerFeedTags = jQuery.parseJSON(headerFeedTags);
+</script>
+
+<!-- If this resource is not a local resource and feed + attached hub exists on it -->
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxLinkedData">
+    <div class="contextmenu">
+        <a class="item fetch_data_button wrapper_linkeddata Resource" about="<?php echo $this->selectedResourceUri; ?>">
+            <span class="icon icon-save" title="Pull and Save">
+                <span>Pull and Save</span>
+            </span>
+        </a>
+    </div>
+    <div class="messagebox search">
+        This resource is available as Linked Data, so <strong>you can pull and save</strong>
+        the current version of this resource.
+    </div>
+</div>
+
+<!-- If this resource is not a local resource and feed + attached hub exists on it -->
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxLinkedDataAndFeed">
+    <div class="contextmenu">
+        <a class="item" id="pubsub-subscriptions-buttonSubscribe">
+            <span class="icon icon-toggle-on" title="Add Updates Subsciption">
+                <span>Add Updates Subsciption</span>
+            </span>
+        </a>
+    </div>
+    <div class="messagebox feed">
+        This resource is available as Linked Data and has an attached subscription feed,
+        so <strong>you can subscribe to any updates</strong> from the maintainer of
+        this resource.
+    </div>
+</div>
+
+<!-- If this resource is not a local resource and a subscription to it already exists -->
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxFeedSubscribed">
+    <div class="contextmenu">
+        <a class="item" id="pubsub-subscriptions-buttonUnSubscribe">
+            <span class="icon icon-toggle-off" title="Cancel Updates Subscription">
+                <span>Cancel Updates Subscription</span>
+            </span>
+        </a>
+    </div>
+    <div class="messagebox info">
+        <strong>You are subscribed</strong> to any updates of this resource.</strong>.
+    </div>
+</div>
+
+<!-- If this resource is not a local resource and a subscription to it already exists -->
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxNewFeedUpdates">
+    <div class="contextmenu">
+        <a class="item" id="pubsub-subscriptions-buttonImportFeedUpdates">
+            <span class="icon icon-toggle-off" title="Import updates">
+                <span>Import updates</span>
+            </span>
+        </a>
+    </div>
+    <div class="messagebox success">
+        <strong>There are new updates for this resource!</strong>.
+    </div>
+</div>
+
+<!-- If this resource is a local resource then it can be published -->
+<div class="has-contextmenu-area" style="display:none;" id="pubsub-subscriptions-msgBoxPublish">
+    <div class="contextmenu">
+        <a class="item" id="pubsub-subscriptions-buttonPublish">
+            <span class="icon icon-toggle-off" title="Publish">
+                <span>Publish</span>
+            </span>
+        </a>
+    </div>
+    <div class="messagebox info">
+        <strong>Publish resource updates</strong>.
+    </div>
+</div>
+
+<!-- If this resource IS a local resource and linked data enabled  -->
+<div class="has-contextmenu-area" style="display:none;">
+    <div class="contextmenu">
+        <a class="item">
+            <span class="icon icon-cancel" title="Cancel Subscriptions">
+                <span>Cancel Subscribers</span>
+            </span>
+        </a>
+        <a class="item">
+            <span class="icon icon-list" title="List Subscribers">
+                <span>List Subscribers</span>
+            </span>
+        </a>
+    </div>
+    <div class="messagebox info">
+        There are currently <strong>5 subscribers</strong> to this resource
+        which receive your changes.
+    </div>
+</div>
+
+
+

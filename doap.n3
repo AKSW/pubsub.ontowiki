@@ -16,7 +16,7 @@
   doap:description "pubsubhubbub support" ;
   owconfig:authorLabel "Konrad Abicht & Lars Eidam" ;
   doap:maintainer <http://aksw.org> ;
-  owconfig:templates "templates" ;
+  owconfig:templates "public/templates" ;
   owconfig:languages "languages/" ;
   owconfig:hasModule :Subscriptions ;
   doap:release :v1-0 ;
