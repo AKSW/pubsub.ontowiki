@@ -22,7 +22,9 @@
   doap:release :v1-0 ;
   owconfig:pluginEvent event:onFeedUpdate ;
   owconfig:config :SubscriptionConfig ;
-  owconfig:config :PublishConfig .
+  owconfig:config :PublishConfig ;
+  owconfig:hasModule :Subscriptions ;
+  owconfig:hasModule :ModelOverview .
   
 :SubscriptionConfig a owconfig:Config;
     owconfig:id "subscriptions";
@@ -50,6 +52,12 @@
 :PublishConfig a owconfig:Config;
     owconfig:id "publish";
     :standardHubUrl "http://localhost:8080/publish".
+
+:ModelOverview a owconfig:Module ;
+  rdfs:label "Model Overview" ;
+  owconfig:priority "30" ;
+  owconfig:context "main.window.modelinfo" ;
+  owconfig:context "main.window.dashmodelinfo" .
 
 :Subscriptions a owconfig:Module ;
   rdfs:label "Subscriptions" ;

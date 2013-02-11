@@ -417,4 +417,28 @@ class PubSubHubbub_Subscription
         else
             return false;
     }
+
+    /**
+     * get the source resource by hash
+     * @return string|null
+     */
+    public function getSourceResource($hash)
+    {
+        $tmp = $this->_subscriptionModelInstance->sparqlQuery(
+            'SELECT ?sourceResource
+            WHERE {
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('id') . '> "'. $hash .'" .
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> ?sourceResource .
+            }
+            LIMIT 1;'
+        );
+        
+        $result = array ();
+        
+        foreach ($tmp as $entry) {
+            return $entry['sourceResource'];
+        }
+        
+        return null;
+    }
 }
