@@ -1,37 +1,41 @@
 <script>
-    selectedResource.isLinkedData = false;
-    var standardPublishHubUrl = '<?php echo $this->standardPublishHubUrl; ?>';
-    var standardHubUrl = '<?php echo $this->standardHubUrl; ?>';
-    var callbackUrl = '<?php echo $this->callbackUrl; ?>';
-    var topicUrl = '<?php echo false === $this->topicUrl ? '' : $this->topicUrl; ?>';
-    var headerFeedTags = '<?php echo json_encode($this->headerFeedTags); ?>';
-    var resourceInformation = '';
-    headerFeedTags = jQuery.parseJSON(headerFeedTags);
+selectedResource.isLinkedData = false;
+var standardPublishHubUrl = '<?php echo $this->standardPublishHubUrl; ?>';
+var standardHubUrl = '<?php echo $this->standardHubUrl; ?>';
+var callbackUrl = '<?php echo $this->callbackUrl; ?>';
+var topicUrl = '<?php echo false === $this->topicUrl ? '' : $this->topicUrl; ?>';
+var headerFeedTags = '<?php echo json_encode($this->headerFeedTags); ?>';
+var resourceInformation = '';
+headerFeedTags = jQuery.parseJSON(headerFeedTags);
 
-    $(document).ready(function(){
-        $("#pubsub-subscriptions-msgBoxNewFeedUpdates").hide();
-        $('#subscriptions').hide();
+$(document).ready(function(){
+    $("#pubsub-subscriptions-msgBoxNewFeedUpdates").hide();
+    $('#subscriptions').hide();
+    
+    /**
+     * You are ALREADY subscribed to the given resource
+     * So the topic url is already in the store
+     */
+    if ('' != topicUrl)
+    {
+        /**
+         * Set events
+         */
+        $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
+        $('#subscriptions').fadeIn('slow');
         
-        if ('' != topicUrl)
-        {
-            $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
-            $('#subscriptions').fadeIn('slow');
-            
-            $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
-            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                subscribe(topicUrl, 'subscribe');
-            });
-            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                subscribe(topicUrl, 'unsubscribe');
-            });
-            
-            // check if there are feed updates for the given topic url
-            $.ajax({
-                url: urlBase + 'pubsub/existsfeedupdates/',
-                data: {r : selectedResource.URI}
-            }).error(function ( xhr ) {
-            }).done(function ( data, textStatus, jqXHR ) {
-            }).success(function ( data, textStatus, jqXHR ){
+        $('#pubsub-subscriptions-msgBoxFeedSubscribed').fadeIn('slow');
+        $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+            subscribe(topicUrl, 'subscribe');
+        });
+        $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+            subscribe(topicUrl, 'unsubscribe');
+        });
+        
+        // check if there are feed updates for the given topic url
+        checkForFeedUpdates(
+            selectedResource.URI, 
+            function(data){            
                 // If there are new feed updates (related files in cache folder)
                 if("true" == data) {
                     $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeIn("slow");
@@ -40,41 +44,34 @@
                      * Set click event for button to import feed updates
                      */
                     $('#pubsub-subscriptions-buttonImportFeedUpdates').click(function(){
-                        $.ajax({
-                            url: urlBase + 'pubsub/importfeedupdates/',
-                            data: {r : selectedResource.URI},
-                            dataType: 'JSON'
-                        }).error(function ( xhr ) {
-                        }).done(function ( data, textStatus, jqXHR ) {
-                        }).success(function ( data, textStatus, jqXHR ){
-                            if ("true" === data)
-                            {
-                                $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeOut("slow");
-                                location.reload();
-                            }
-                        });
+                        importFeedUpdates(selectedResource.URI);
                     });
                 }
-            });
-        }
-        else
-        {
-            $.ajax({
-                url: urlBase + 'pubsub/checkresource/',
-                datatype: 'JSON',
-                data: {r : selectedResource.URI}
-            }).error(function ( xhr ) {
-            }).done(function ( data, textStatus, jqXHR ) {
-            }).success(function ( data, textStatus, jqXHR ) {
+        });
+    }
+    
+    /**
+     * You are NOT subscribed to the given resource!
+     */
+    else
+    {
+        checkResource(
+            selectedResource.URI, 
+            function(data) {
+                
+                // result data >> JSON
                 resourceInformation = $.parseJSON(data);
+                
+                // show isLinkedData box if resource is linked data
                 if (true == resourceInformation.isLinkedData)
                 {
                     $('#subscriptions').fadeIn('slow');
                     $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
                 }
+                
                 $.ajax({
                     url: urlBase + 'resource/head/',
-                    data: {r : selectedResource.URI, noredirect: true}
+                    data: {r : selectedResource.URI, noredirect: false}
                 }).error(function ( xhr ) {
                     console.log(xhr);
                 }).done(function ( data, textStatus, jqXHR ) {
@@ -119,16 +116,66 @@
                         });
                     }
                 });
-            });
-        }
-    });
-    
+            }
+        );
+    }
+});
+
+/**
+ * FUNCTIONS
+ */
+ 
+// 
 function arrayKeysToUpper(data) {
     for ( var index in data) {
         data[index.toLowerCase()] = data[index];
     }
     return data;
 }
+ 
+// check the feed for new updates
+function checkForFeedUpdates(selectedResourceUri, callback) {
+    // check if there are feed updates for the given topic url
+    $.ajax({
+        url: urlBase + 'pubsub/existsfeedupdates/',
+        data: {r : selectedResourceUri}
+    }).error(function ( xhr ) {
+    }).done(function ( data, textStatus, jqXHR ) {
+    }).success(function ( data, textStatus, jqXHR ){
+        callback(data);
+    });
+}
+
+// 
+function checkResource(selectedResourceUri, callback) {
+    $.ajax({
+        url: urlBase + 'pubsub/checkresource/',
+        datatype: 'JSON',
+        data: {r : selectedResource.URI}
+    }).error(function ( xhr ) {
+    }).done(function ( data, textStatus, jqXHR ) {
+    }).success(function ( data, textStatus, jqXHR ) {
+        callback(data);
+    });
+}
+
+// import feed updates for the given selected resource uri
+function importFeedUpdates(selectedResourceUri) {
+    $.ajax({
+        url: urlBase + 'pubsub/importfeedupdates/',
+        data: {r : selectedResourceUri},
+        dataType: 'JSON'
+    }).error(function ( xhr ) {
+    }).done(function ( data, textStatus, jqXHR ) {
+    }).success(function ( data, textStatus, jqXHR ){
+        if ("true" === data) {
+            $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeOut("slow");
+            location.reload();
+        }
+    });
+}
+
+//
 function subscribe(topicUrl, mode) {
     $.ajax({
         url: urlBase + 'pubsub/subscription',
