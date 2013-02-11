@@ -10,6 +10,15 @@ class PubSubHubbub_Subscription
     extends Zend_Feed_Pubsubhubbub_Model_ModelAbstract
     implements Zend_Feed_Pubsubhubbub_Model_SubscriptionInterface
 {
+    /**
+     * New versioning type codes.
+     */
+    const VERSIONING_SUBSCRIPTION_ADD_ACTION_TYPE      = 3110;
+    const VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE   = 3120;
+    const VERSIONING_SUBSCRIPTION_DELETE_ACTION_TYPE   = 3130;
+
+    protected $_versioning;
+
     protected $_subscriptionModelInstance;
     protected $_subscriptionConfig;
     protected $_propertyMatching = array(
@@ -29,6 +38,9 @@ class PubSubHubbub_Subscription
         // avoid Zend table init
         $this->_subscriptionConfig = $subscriptionConfig;
         $this->_subscriptionModelInstance = $subscriptionModelInstance;
+
+        $erfurt = Erfurt_App::getInstance();
+        $this->_versioning = $erfurt->getVersioning();
     }
 
     /**
@@ -124,6 +136,8 @@ class PubSubHubbub_Subscription
      */
     public function setSubscription(array $data)
     {
+        $returnValue = false;
+
         if (!isset($data['id'])) {
             require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
             throw new Zend_Feed_Pubsubhubbub_Exception(
@@ -155,18 +169,43 @@ class PubSubHubbub_Subscription
                 $data['expiration_time'] = $now->add($data['lease_seconds'], Zend_Date::SECOND)
                 ->get('yyyy-MM-dd HH:mms');
             }
-            $statements = $this->_generateStatements($subscriptionResourceUri, $data, $subscriptionResourceProperties);
+            $statements = $this->_generateStatements(
+                $subscriptionResourceUri,
+                $data,
+                $subscriptionResourceProperties
+            );
+
+            $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
+                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'resourceuri' => $subscriptionResourceUri
+            );
+            // Start action
+            $this->_versioning->startAction($versioningActionSpec);
+
             $this->_subscriptionModelInstance->addMultipleStatements($statements['addStatements']);
             $this->_subscriptionModelInstance->deleteMultipleStatements($statements['deleteStatements']);
 
-            return false;
+            $returnValue = false;
         } else {
             $statements = $this->_generateStatements($subscriptionResourceUri, $data);
+
+            $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_ADD_ACTION_TYPE,
+                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'resourceuri' => $subscriptionResourceUri
+            );
+            // Start action
+            $this->_versioning->startAction($versioningActionSpec);
+
             $this->_subscriptionModelInstance->addMultipleStatements($statements['addStatements']);
 
-            return true;
+            $returnValue = true;
         }
 
+        $this->_versioning->endAction();
+
+        return $returnValue;
         // old implementation
         /*
         $result = $this->_db->find($data['id']);
@@ -319,11 +358,46 @@ class PubSubHubbub_Subscription
                 $key
             );
 
-            $this->_subscriptionModelInstance->deleteMatchingStatements(
-                $subscriptionResourceUri,
-                null,
-                null
+            $subscriptionResource = new OntoWiki_Model_Resource(
+                $this->_subscriptionModelInstance->getStore(),
+                $this->_subscriptionModelInstance,
+                $subscriptionResourceUri
             );
+            $modelUri = $this->_subscriptionModelInstance->getBaseUri();
+            $subscriptionResourceProperties = $subscriptionResource->getValues();
+            $subscriptionResourceProperties = $subscriptionResourceProperties[$modelUri];
+
+            foreach ($subscriptionResourceProperties as $property => $objects) {
+                 foreach ($objects as $objectNumber => $object) {
+                    if (isset($object['content']) && null !== $object['content']) {
+                       $subscriptionResourceProperties[$property][$objectNumber]['type'] = 'literal';
+                       $subscriptionResourceProperties[$property][$objectNumber]['value'] = $object['content'];
+                    }
+                    if (isset($object['uri']) && null !== $object['uri']) {
+                       $subscriptionResourceProperties[$property][$objectNumber]['type'] = 'uri';
+                       $subscriptionResourceProperties[$property][$objectNumber]['value'] = $object['uri'];
+                    }
+                 }
+
+            }
+            $deleteStatements = array(
+                $subscriptionResourceUri => $subscriptionResourceProperties
+            );
+
+            $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_DELETE_ACTION_TYPE,
+                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'resourceuri' => $subscriptionResourceUri
+            );
+            // Start action
+            $this->_versioning->startAction($versioningActionSpec);
+
+            $this->_subscriptionModelInstance->deleteMultipleStatements(
+                $deleteStatements
+            );
+
+            $this->_versioning->endAction();
+
             return true;
         }
         return false;
@@ -358,7 +432,19 @@ class PubSubHubbub_Subscription
                 'value' => $resourceUri,
                 'type' => 'uri'
             );
+
+        $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
+                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'resourceuri' => $subscriptionResourceUri
+            );
+
+        // Start action
+        $this->_versioning->startAction($versioningActionSpec);
+
         $this->_subscriptionModelInstance->addMultipleStatements($addStatements);
+
+        $this->_versioning->endAction();
     }
 
     /**
@@ -379,7 +465,19 @@ class PubSubHubbub_Subscription
                 'value' => $subscribingUserUri,
                 'type' => 'uri'
             );
+
+        $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
+                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'resourceuri' => $subscriptionResourceUri
+            );
+
+        // Start action
+        $this->_versioning->startAction($versioningActionSpec);
+
         $this->_subscriptionModelInstance->addMultipleStatements($addStatements);
+
+        $this->_versioning->endAction();
     }
 
     /**

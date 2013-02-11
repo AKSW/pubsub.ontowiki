@@ -351,14 +351,21 @@ class PubsubController extends OntoWiki_Controller_Component
                         ? 'uri'
                         : 'literal';
 
-                        $model->deleteMatchingStatements(
-                            $statement->deleted[0][0],
-                            $statement->deleted[0][1],
-                            array('value' => $statement->deleted[0][2], 'type' => $type)
+                        $deleteStatement = array(
+                            $statement->deleted[0][0] => array(
+                                $statement->deleted[0][1] => array(
+                                    array('value' => $statement->deleted[0][2], 'type' => $type)
+                                )
+                            )
+                        );
+                        $model->deleteMultipleStatements(
+                            $deleteStatement
                         );
                     }
                 }
+
                 $versioning->endAction();
+
                 //delete files
                 foreach ($cacheFiles as $filename) {
                     if (false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')) {
@@ -373,16 +380,17 @@ class PubsubController extends OntoWiki_Controller_Component
     /**
      * Resource Action
      */
-    public function resourcewithfeedAction()
+    public function testAction()
     {
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
 
-        header(
-            'Link: http://pshbsubway.local/history/feed/?' .
-            'r=http%3A%2F%2Fpshbsubway.local%2Fpubsub%2Fresourcewithfeed'
+        $subscriptionStorage = new PubSubHubbub_Subscription(
+            $this->_subscriptionModelInstance,
+            $this->_privateConfig->get('subscriptions')
         );
+        $subscriptionStorage->deleteSubscription('22fee68d4206198fa6d983c25db0578d');
     }
 }
