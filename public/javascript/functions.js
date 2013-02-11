@@ -69,6 +69,7 @@ function isSubscriptionTopicUrlResolvable(subscriptionTopicUrl, callbackOnSucces
     }).error(function ( xhr ) {
         console.log(xhr);
     }).success(function ( data, textStatus, jqXHR ) {
+    }).done(function(data){
         callbackOnSuccess();
     });
 }
