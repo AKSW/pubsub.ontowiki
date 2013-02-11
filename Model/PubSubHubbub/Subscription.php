@@ -362,6 +362,27 @@ class PubSubHubbub_Subscription
     }
 
     /**
+     * function save the subscribing user uri to the subscription
+     */
+    public function addSubscribingUserUri($key, $subscribingUserUri)
+    {
+        // generate uri with topic_url and hub_url
+        $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
+            $this->_subscriptionConfig->get('classUri'),
+            $key
+        );
+        $addStatements = array();
+        $addStatements[$subscriptionResourceUri] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('subscribingUser')] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('subscribingUser')][]
+            = array(
+                'value' => $subscribingUserUri,
+                'type' => 'uri'
+            );
+        $this->_subscriptionModelInstance->addMultipleStatements($addStatements);
+    }
+
+    /**
      * get the topic url for a given resource uri
      */
     public function getTopicByResourceUri($resourceUri)

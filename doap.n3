@@ -32,6 +32,7 @@
     :classUri "http://localhost/PubSub/Subscription/" ;
     :id "http://localhost/PubSub/id/" ;
     :sourceResource "http://localhost/PubSub/sourceResource/" ;
+    :subscribingUser "http://localhost/PubSub/subscribingUser/" ;
     :topicUrl "http://localhost/PubSub/topicUrl/" ;
     :hubUrl "http://localhost/PubSub/hubUrl/" ;
     :createdTime "http://localhost/PubSub/createTime/" ;

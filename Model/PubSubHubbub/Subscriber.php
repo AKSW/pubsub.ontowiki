@@ -120,4 +120,20 @@ class PubSubHubbub_Subscriber
         }
     }
 
+    /**
+     * function save the subscribing user uri to the subscription
+     */
+    public function addSubscribingUserUri($subscribingUserUri)
+    {
+        $hubs = $this->getHubUrls();
+
+        foreach ($hubs as $hubUrl) {
+            $params = array(
+                'hub.topic' => $this->getTopicUrl(),
+            );
+            $key = $this->_generateSubscriptionKey($params, $hubUrl);
+            $this->_storage->addSubscribingUserUri($key, $subscribingUserUri);
+        }
+    }
+
 }

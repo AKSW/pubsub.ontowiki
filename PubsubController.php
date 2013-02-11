@@ -80,6 +80,8 @@ class PubsubController extends OntoWiki_Controller_Component
         $verifyMode = $this->getParam('verifyMode');
         $sourceResource = $this->getParam('sourceResource');
 
+        $subscribingUserUri = $this->_owApp->getUser()->getUri();
+
         if ("" != $hubUrl && "" != $topicUrl && "" != $callBackUrl) {
             $subscriber = new PubSubHubbub_Subscriber;
             $subscriber->setStorage($subscriptionStorage);
@@ -93,6 +95,8 @@ class PubsubController extends OntoWiki_Controller_Component
                 $subscriber->subscribeAll();
                 if ("" != $sourceResource)
                     $subscriber->addSourceResourceUri($sourceResource);
+                if ("" != $subscribingUserUri)
+                    $subscriber->addSubscribingUserUri($subscribingUserUri);
             } else if ("unsubscribe" == $subscriptionMode)
                 $subscriber->unsubscribeAll();
             else {

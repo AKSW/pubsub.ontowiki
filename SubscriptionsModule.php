@@ -60,14 +60,14 @@ class SubscriptionsModule extends OntoWiki_Module
             $this->_subscriptionModelInstance,
             $this->_privateConfig->get('subscriptions')
         );
-        
+
         // include javascript files
         $basePath = $this->_config->staticUrlBase . 'extensions/pubsub/';
         $baseJavascriptPath = $basePath .'public/javascript/';
-        
+
         $this->view->headScript()
-            ->prependFile ($baseJavascriptPath. 'functions.js', 'text/javascript')
-            ->prependFile ($baseJavascriptPath. 'subscriptions.js', 'text/javascript');
+            ->prependFile($baseJavascriptPath. 'functions.js', 'text/javascript')
+            ->prependFile($baseJavascriptPath. 'subscriptions.js', 'text/javascript');
     }
 
     public function getTitle()
