@@ -12,5 +12,8 @@ class PubsubPlugin extends OntoWiki_Plugin
      * Trigger on Pub Hub pushed new feed updates for a particular topicUrl.
      * @param $event Erfurt_Event containing xhubSubscription property with subscription id
      */
-    public function onFeedUpdate($event){}
+    public function onFeedUpdate($event)
+    {
+
+    }
 }

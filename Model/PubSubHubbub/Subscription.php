@@ -219,7 +219,7 @@ class PubSubHubbub_Subscription
         );
 
         $subscriptionResourceProperties = $subscriptionResource->getValues();
-        
+
         if (0 < count($subscriptionResourceProperties)) {
             $subscriptionResourceProperties = $subscriptionResourceProperties
                 [$this->_subscriptionModelInstance->getModelIri()];
@@ -378,7 +378,7 @@ class PubSubHubbub_Subscription
         else
             return false;
     }
-    
+
     /**
      * get the topic url for a given resource uri
      */

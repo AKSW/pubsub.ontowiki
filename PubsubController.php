@@ -12,7 +12,7 @@ class PubsubController extends OntoWiki_Controller_Component
      * New versioning type codes.
      */
     const VERSIONING_FEED_SYNC_ACTION_TYPE   = 3010;
-    
+
     protected $_subscriptionModelInstance;
 
     public function init()
@@ -106,7 +106,7 @@ class PubsubController extends OntoWiki_Controller_Component
                      ->setHttpResponseCode(200);
             else {
                 foreach ($subscriber->getErrors() as $error) {
-                    $this->_response->appendBody(var_dump($error));
+                    $this->_response->appendBody($error);
                 }
                 $this->_response->setHttpResponseCode(404);
 
@@ -140,36 +140,38 @@ class PubsubController extends OntoWiki_Controller_Component
         $callback->setStorage($subscriptionStorage);
 
         $callback->handle($this->_request->getParams());
-        
+
         // response to hub immediatly to avoid blocking the hub
         $callback->sendResponse();
-        
-        if( true === $callback->hasFeedUpdate() ) {
+
+        if (true === $callback->hasFeedUpdate()) {
             $filePath = $this->_owApp->erfurt->getCacheDir() .
                         "pubsub_" .
                         $this->_request->getParam('xhub_subscription') .
                         "_" .
                         time() .
                         ".xml";
-            
+
             if ( false === ( $fh = fopen($filePath, 'w') ) ) {
                 // can't open the file
                 $m = "No write permissions for ". $filePath;
-                throw new CubeViz_Exception ( $m );
+                throw new CubeViz_Exception($m);
                 return $m;
             }
-            
+
             // write all parameters line by line
-			fwrite($fh, $callback->getFeedUpdate() . "\n");
-			chmod ($filePath, 0755);
-			fclose($fh);
-            
+            fwrite($fh, $callback->getFeedUpdate() . "\n");
+            chmod($filePath, 0755);
+            fclose($fh);
+
             // collect all resource properties and attach it to the event object
-            $subscriptionResourceData = $subscriptionStorage->getSubscription($this->_request->getParam('xhub_subscription'));
+            $subscriptionResourceData = $subscriptionStorage->getSubscription(
+                $this->_request->getParam('xhub_subscription')
+            );
             $event = new Erfurt_Event('onFeedUpdate');
             $event->subscriptionResourceProperties = $subscriptionResourceData['resourceProperties'];
             $event->trigger();
-		}
+        }
 
     }
     /**
@@ -185,44 +187,42 @@ class PubsubController extends OntoWiki_Controller_Component
 
         $hubUrl = $this->getParam('hubUrl');
         $topicUrl = $this->getParam('topicUrl');
-        
+
         if ("" != $hubUrl && "" != $topicUrl) {
             $publisher = new Zend_Feed_Pubsubhubbub_Publisher;
-            
+
             $publisher->addHubUrl($hubUrl);
             $publisher->addUpdatedTopicUrl($topicUrl);
-            
+
             $publisher->notifyAll();
-     
+
             if ($publisher->isSuccess() && 0 == count($publisher->getErrors())) {
                 $this->_response->setBody('')
                          ->setHttpResponseCode(200);
             } else {
                 foreach ($publisher->getErrors() as $error) {
-                    $this->_response->appendBody(var_dump($error));
+                    $this->_response->appendBody($error);
                 }
                 $this->_response->setHttpResponseCode(404);
             }
-        }
-        else
-        {
+        } else {
             echo 'FAILURE: missing parameter';
             $this->_response->setHttpResponseCode(500);
             return;
         }
     }
-    
+
     /*
      * check if a uri is LinkedData
      */
-    
+
     public function checkresourceAction()
     {
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
-        
+
         $resourceUri = $this->getParam('r', '');
         $result = array(
             'isLinkedData' => false,
@@ -230,11 +230,9 @@ class PubsubController extends OntoWiki_Controller_Component
             'hasError' => false,
             'errorMessage' => ''
         );
-        
-        if ("" != $resourceUri)
-        {
-            if (false === strpos($resourceUri, $this->_owApp->getUrlBase()))
-            {
+
+        if ("" != $resourceUri) {
+            if (false === strpos($resourceUri, $this->_owApp->getUrlBase())) {
                 $resource = new Erfurt_Rdf_Resource($resourceUri);
                 // check for LinkedData
                 $wrapper = new Erfurt_Wrapper_LinkeddataWrapper();
@@ -250,70 +248,68 @@ class PubsubController extends OntoWiki_Controller_Component
             else
                 $result['isLocalResource'] = true;
         }
-        
+
         $this->_response->appendBody(json_encode($result));
     }
-    
+
     public function existsfeedupdatesAction()
     {
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
-        
+
         $r = $this->_request->getParam('r');
-        
+
         $subscriptionStorage = new PubSubHubbub_Subscription(
             $this->_subscriptionModelInstance,
             $this->_privateConfig->get('subscriptions')
         );
-        
+
         $subscriptionId = $subscriptionStorage->getSubscriptionIdByResourceUri($r);
-        
-        if(false !== $subscriptionId) {        
+
+        if (false !== $subscriptionId) {
             $cacheFiles = scandir($this->_owApp->erfurt->getCacheDir());
-            
+
             foreach ($cacheFiles as $filename) {
-                if(false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')){
+                if (false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')) {
                     echo "true";
                     return;
                 }
             }
         }
-        
+
         echo "false";
-        return;
     }
-    
+
     public function importfeedupdatesAction()
     {
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
-        
+
         $r = $this->_request->getParam('r');
         $model = $this->_owApp->selectedModel;
         $subscriptionStorage = new PubSubHubbub_Subscription(
             $this->_subscriptionModelInstance,
             $this->_privateConfig->get('subscriptions')
         );
-        
+
         $subscriptionId = $subscriptionStorage->getSubscriptionIdByResourceUri($r);
         $statements = array();
-        if(false !== $subscriptionId) {
+        if (false !== $subscriptionId) {
             $cacheFolder = $this->_owApp->erfurt->getCacheDir();
             $cacheFiles = scandir($cacheFolder);
-            
+
             foreach ($cacheFiles as $filename) {
-                if(false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')){
-                    
+                if (false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')) {
+
                     //$feed = Zend_Feed_Reader::importFile($cacheFolder .'/'. $filename);
-                    
+
                     $xml = new SimpleXMLElement(file_get_contents($cacheFolder .'/'. $filename));
-                    
-                    foreach ($xml->entry as $entry)
-                    {
+
+                    foreach ($xml->entry as $entry) {
                         $namespaces = $entry->getNamespaces(true);
                         $xhtml = $entry->content->children($namespaces['xhtml']);
                         $divContent = json_decode((string) $xhtml->div);
@@ -321,8 +317,7 @@ class PubsubController extends OntoWiki_Controller_Component
                     }
                 }
             }
-            if (0 < count($statements))
-            {
+            if (0 < count($statements)) {
                 $erfurt = Erfurt_App::getInstance();
                 $versioning = $erfurt->getVersioning();
                 $actionSpec = array(
@@ -330,32 +325,28 @@ class PubsubController extends OntoWiki_Controller_Component
                     'modeluri'    => $model->getBaseUri(),
                     'resourceuri' => $r
                 );
-                
+
                 sort($statements);
-                
+
                 // Start action
                 $versioning->startAction($actionSpec);
-                
-                foreach ($statements as $statement)
-                {
-                    if (0 < count($statement->added))
-                    {
-                        $type = true == Erfurt_Uri::check($statement->added[0][2]) 
+
+                foreach ($statements as $statement) {
+                    if (0 < count($statement->added)) {
+                        $type = true == Erfurt_Uri::check($statement->added[0][2])
                         ? 'uri'
                         : 'literal';
-                        
+
                         $model->addStatement(
                             $statement->added[0][0],
                             $statement->added[0][1],
                             array('value' => $statement->added[0][2], 'type' => $type)
                         );
-                    }
-                    elseif (0 < count($statement->deleted))
-                    {
-                        $type = true == Erfurt_Uri::check($statement->deleted[0][2]) 
+                    } elseif (0 < count($statement->deleted)) {
+                        $type = true == Erfurt_Uri::check($statement->deleted[0][2])
                         ? 'uri'
                         : 'literal';
-                        
+
                         $model->deleteMatchingStatements(
                             $statement->deleted[0][0],
                             $statement->deleted[0][1],
@@ -366,7 +357,7 @@ class PubsubController extends OntoWiki_Controller_Component
                 $versioning->endAction();
                 //delete files
                 foreach ($cacheFiles as $filename) {
-                    if(false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')){
+                    if (false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')) {
                         unlink($cacheFolder .'/'. $filename);
                     }
                 }
@@ -374,7 +365,7 @@ class PubsubController extends OntoWiki_Controller_Component
         }
         echo json_encode("true");
     }
-    
+
     /**
      * Resource Action
      */
@@ -385,6 +376,9 @@ class PubsubController extends OntoWiki_Controller_Component
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
 
-        header('Link: http://pshbsubway.local/history/feed/?r=http%3A%2F%2Fpshbsubway.local%2Fpubsub%2Fresourcewithfeed');
+        header(
+            'Link: http://pshbsubway.local/history/feed/?' .
+            'r=http%3A%2F%2Fpshbsubway.local%2Fpubsub%2Fresourcewithfeed'
+        );
     }
 }
