@@ -27,7 +27,11 @@
 :SubscriptionConfig a owconfig:Config;
     owconfig:id "subscriptions";
     :standardHubUrl "http://localhost:8080/subscribe";
-    :callbackUrl "http://www.pshb.local/pubsub/callback";
+    
+    # If its empty pubsub component will use OntoWiki's base url
+    # Otherwise your are free to use your own callback url here (full, not relative!)
+    :callbackUrl "";
+    
     :modelUri "http://localhost/PubSub/Subscriptions/";
     :classUri "http://localhost/PubSub/Subscription/" ;
     :id "http://localhost/PubSub/id/" ;

@@ -88,7 +88,13 @@ class SubscriptionsModule extends OntoWiki_Module
         );
         $this->view->headerFeedTags = $this->_headerFeedTags;
         $this->view->standardHubUrl = $this->_privateConfig->get('subscriptions')->get('standardHubUrl');
-        $this->view->callbackUrl = $this->_privateConfig->get('subscriptions')->get('callbackUrl');
+        
+        $this->view->callbackUrl = trim($this->_privateConfig->get('subscriptions')->get('callbackUrl'));
+        
+        // if callbackUrl is empty string, use the baseUrl + path to pubsub
+        if ('' == $this->view->callbackUrl) {
+            $this->view->callbackUrl = $this->_config->staticUrlBase . 'pubsub/callback';
+        }
 
         $this->view->standardPublishHubUrl = $this->_privateConfig->get('publish')->get('standardHubUrl');
 
