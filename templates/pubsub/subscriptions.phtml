@@ -69,53 +69,59 @@ $(document).ready(function(){
                     $('#pubsub-subscriptions-msgBoxLinkedData').fadeIn('slow');
                 }
                 
-                $.ajax({
-                    url: urlBase + 'resource/head/',
-                    data: {r : selectedResource.URI, noredirect: false}
-                }).error(function ( xhr ) {
-                    console.log(xhr);
-                }).done(function ( data, textStatus, jqXHR ) {
-                }).success(function ( data, textStatus, jqXHR ) {
-                    data = $.parseJSON(data);
-                    data = arrayKeysToUpper(data);
-                    if (undefined !== data[headerFeedTags[0]])
-                    {
-                        var subscriptionTopicUrl = data[headerFeedTags[0]];
-                        $.ajax({
-                            url: subscriptionTopicUrl,
-                            datatype: 'xml'
-                        }).error(function ( xhr ) {
-                            console.log(xhr);
-                        }).success(function ( data, textStatus, jqXHR ) {
-                            $('#subscriptions').fadeIn('slow');
-                            $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
-                            $('#pubsub-subscriptions-buttonSubscribe').click(function(){
-                                subscribe(subscriptionTopicUrl, 'subscribe');
-                            });
-                            $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
-                                subscribe(subscriptionTopicUrl, 'unsubscribe');
-                            });
-                            if (false == resourceInformation.isLinkedData && true == resourceInformation.isLocalResource)
-                            {
-                                $('#pubsub-subscriptions-msgBoxPublish').fadeIn('slow');
-                                $('#pubsub-subscriptions-buttonPublish').click(function(){
-                                    $.ajax({
-                                        url: urlBase + 'pubsub/publish/',
-                                        data: {
-                                            hubUrl : standardPublishHubUrl,
-                                            topicUrl : subscriptionTopicUrl
-                                        },
-                                        dataType: 'JSON'
-                                    }).error(function ( xhr ) {
-                                        console.log(xhr);
-                                    }).success(function ( data, textStatus, jqXHR ) {
-                                        $('#pubsub-subscriptions-msgBoxPublish').fadeOut('slow');
+                // get header for given resource uri
+                askResourceHead(
+                    selectedResource.URI,
+                    false,
+                    function(data){
+                        
+                        // result data >> JSON
+                        data = $.parseJSON(data);
+                        
+                        // normalize array keys
+                        data = arrayKeysToLower(data);
+                        
+                        // if the feed tag field in data-array is set
+                        if (undefined !== data[headerFeedTags[0]]) {
+                            
+                            var subscriptionTopicUrl = data[headerFeedTags[0]];
+                                                            
+                            isSubscriptionTopicUrlResolvable(
+                                subscriptionTopicUrl,
+                                function(){ // If it is RESOLVEABLE
+                                    $('#subscriptions').fadeIn('slow');
+                                    $('#pubsub-subscriptions-msgBoxLinkedDataAndFeed').fadeIn('slow');
+                                    
+                                    // subscribe
+                                    $('#pubsub-subscriptions-buttonSubscribe').click(function(){
+                                        subscribe(subscriptionTopicUrl, 'subscribe');
                                     });
-                                });
-                            }
-                        });
+                                    
+                                    // unsubscribe
+                                    $('#pubsub-subscriptions-buttonUnSubscribe').click(function(){
+                                        subscribe(subscriptionTopicUrl, 'unsubscribe');
+                                    });
+                                    
+                                    if (false == resourceInformation.isLinkedData 
+                                        && true == resourceInformation.isLocalResource)
+                                    {
+                                        $('#pubsub-subscriptions-msgBoxPublish').fadeIn('slow');
+                                        
+                                        $('#pubsub-subscriptions-buttonPublish').click(function(){
+                                            publishSubscriptionTopicUrl(
+                                                standardPublishHubUrl,
+                                                subscriptionTopicUrl,
+                                                function(){
+                                                    $('#pubsub-subscriptions-msgBoxPublish').fadeOut('slow');
+                                                }
+                                            );
+                                        });
+                                    }
+                                }
+                            );
+                        }
                     }
-                });
+                );
             }
         );
     }
@@ -126,11 +132,24 @@ $(document).ready(function(){
  */
  
 // 
-function arrayKeysToUpper(data) {
+function arrayKeysToLower(data) {
     for ( var index in data) {
         data[index.toLowerCase()] = data[index];
     }
     return data;
+}
+
+// get header for the given resource, decide if using redirects or not
+function askResourceHead(selectedResourceUri, noredirect, callback) {
+    $.ajax({
+        url: urlBase + 'resource/head/',
+        data: {r : selectedResourceUri, noredirect: noredirect}
+    }).error(function ( xhr ) {
+        console.log(xhr);
+    }).done(function ( data, textStatus, jqXHR ) {
+    }).success(function ( data, textStatus, jqXHR ) {
+        callback(data);
+    });
 }
  
 // check the feed for new updates
@@ -172,6 +191,31 @@ function importFeedUpdates(selectedResourceUri) {
             $("#pubsub-subscriptions-msgBoxNewFeedUpdates").fadeOut("slow");
             location.reload();
         }
+    });
+}
+
+// check if given subscription topic url is resolvable
+function isSubscriptionTopicUrlResolvable(subscriptionTopicUrl, callbackOnSuccess) {
+    $.ajax({
+        url: subscriptionTopicUrl,
+        datatype: 'xml'
+    }).error(function ( xhr ) {
+        console.log(xhr);
+    }).success(function ( data, textStatus, jqXHR ) {
+        callbackOnSuccess();
+    });
+}
+
+// publish to a given hub and a subscription topic url
+function publishSubscriptionTopicUrl(hubUrl, subscriptionTopicUrl, callback) {
+    $.ajax({
+        url: urlBase + 'pubsub/publish/',
+        data: { hubUrl : hubUrl, topicUrl : subscriptionTopicUrl },
+        dataType: 'JSON'
+    }).error(function ( xhr ) {
+        console.log(xhr);
+    }).success(function ( data, textStatus, jqXHR ) {
+        callback();
     });
 }
 
