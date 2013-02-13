@@ -62,57 +62,76 @@ $(document).ready(function(){
                 // get header for given resource uri
                 askResourceHead(
                     selectedResource.URI,
-                    false,
+                    true,
                     function(data){
-                        
-                        // result data >> JSON
-                        data = $.parseJSON(data);
-                        
-                        // normalize array keys
-                        data = arrayKeysToLower(data);
-                        
-                        // if the feed tag field in data-array is set
-                        if (undefined !== data[headerFeedTags[0]]) {
-                            
-                            var subscriptionTopicUrl = data[headerFeedTags[0]];
-                                                            
-                            isSubscriptionTopicUrlResolvable(
-                                subscriptionTopicUrl,
-                                function(){ // If it is RESOLVEABLE
-                                    $("#subscriptions").fadeIn("slow");
-                                    $("#pubsub-subscriptions-msgBoxLinkedDataAndFeed").fadeIn("slow");
-                                    
-                                    // subscribe
-                                    $("#pubsub-subscriptions-buttonSubscribe").click(function(){
-                                        subscribe(subscriptionTopicUrl, "subscribe");
-                                    });
-                                    
-                                    // unsubscribe
-                                    $("#pubsub-subscriptions-buttonUnSubscribe").click(function(){
-                                        subscribe(subscriptionTopicUrl, "unsubscribe");
-                                    });
-                                    
-                                    if (false == resourceInformation.isLinkedData 
-                                        && true == resourceInformation.isLocalResource)
-                                    {
-                                        $("#pubsub-subscriptions-msgBoxPublish").fadeIn("slow");
-                                        
-                                        $("#pubsub-subscriptions-buttonPublish").click(function(){
-                                            publishSubscriptionTopicUrl(
-                                                standardPublishHubUrl,
-                                                subscriptionTopicUrl,
-                                                function(){
-                                                    $("#pubsub-subscriptions-msgBoxPublish").fadeOut("slow");
-                                                }
-                                            );
-                                        });
-                                    }
+                        var feedFound = checkFeed(data);
+                        if (false === feedFound)
+                        {
+                            askResourceHead(
+                                selectedResource.URI,
+                                false,
+                                function(data){
+                                    checkFeed(data);
                                 }
                             );
                         }
+                        
                     }
                 );
+                
             }
         );
     }
 });
+
+function checkFeed(data)
+{
+    returnValue = false;
+    // result data >> JSON
+    data = $.parseJSON(data);
+    
+    // normalize array keys
+    data = arrayKeysToLower(data);
+    
+    // if the feed tag field in data-array is set
+    if (undefined !== data[headerFeedTags[0]]) {
+        returnValue = true;
+        
+        var subscriptionTopicUrl = data[headerFeedTags[0]];
+                                        
+        isSubscriptionTopicUrlResolvable(
+            subscriptionTopicUrl,
+            function(){ // If it is RESOLVEABLE
+                $("#subscriptions").fadeIn("slow");
+                $("#pubsub-subscriptions-msgBoxLinkedDataAndFeed").fadeIn("slow");
+                
+                // subscribe
+                $("#pubsub-subscriptions-buttonSubscribe").click(function(){
+                    subscribe(subscriptionTopicUrl, "subscribe");
+                });
+                
+                // unsubscribe
+                $("#pubsub-subscriptions-buttonUnSubscribe").click(function(){
+                    subscribe(subscriptionTopicUrl, "unsubscribe");
+                });
+                
+                if (false == resourceInformation.isLinkedData 
+                    && true == resourceInformation.isLocalResource)
+                {
+                    $("#pubsub-subscriptions-msgBoxPublish").fadeIn("slow");
+                    
+                    $("#pubsub-subscriptions-buttonPublish").click(function(){
+                        publishSubscriptionTopicUrl(
+                            standardPublishHubUrl,
+                            subscriptionTopicUrl,
+                            function(){
+                                $("#pubsub-subscriptions-msgBoxPublish").fadeOut("slow");
+                            }
+                        );
+                    });
+                }
+            }
+        );
+    }
+    return returnValue;
+}
