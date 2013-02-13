@@ -47,7 +47,8 @@
     :secret "http://localhost/PubSub/secret/" ;
     :expirationTime "http://localhost/PubSub/expirationTime/" ;
     :subscriptionState "http://localhost/PubSub/subscriptionState/" ;
-    :headerFeedTags "link".
+    :headerFeedTags "x-link" ;
+    :headerFeedTags "link" .
     
 :PublishConfig a owconfig:Config;
     owconfig:id "publish";

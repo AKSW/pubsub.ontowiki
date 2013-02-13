@@ -59,7 +59,8 @@ $(document).ready(function(){
                     $("#pubsub-subscriptions-msgBoxLinkedData").fadeIn("slow");
                 }
                 
-                // get header for given resource uri
+                // get header for given resource uri, first check is with no redirect and
+                // if no link is found the second check is with redirect
                 askResourceHead(
                     selectedResource.URI,
                     true,
@@ -86,52 +87,58 @@ $(document).ready(function(){
 
 function checkFeed(data)
 {
-    returnValue = false;
+    foundFeedLink = false;
     // result data >> JSON
     data = $.parseJSON(data);
     
     // normalize array keys
     data = arrayKeysToLower(data);
     
-    // if the feed tag field in data-array is set
-    if (undefined !== data[headerFeedTags[0]]) {
-        returnValue = true;
-        
-        var subscriptionTopicUrl = data[headerFeedTags[0]];
-                                        
-        isSubscriptionTopicUrlResolvable(
-            subscriptionTopicUrl,
-            function(){ // If it is RESOLVEABLE
-                $("#subscriptions").fadeIn("slow");
-                $("#pubsub-subscriptions-msgBoxLinkedDataAndFeed").fadeIn("slow");
-                
-                // subscribe
-                $("#pubsub-subscriptions-buttonSubscribe").click(function(){
-                    subscribe(subscriptionTopicUrl, "subscribe");
-                });
-                
-                // unsubscribe
-                $("#pubsub-subscriptions-buttonUnSubscribe").click(function(){
-                    subscribe(subscriptionTopicUrl, "unsubscribe");
-                });
-                
-                if (false == resourceInformation.isLinkedData 
-                    && true == resourceInformation.isLocalResource)
-                {
-                    $("#pubsub-subscriptions-msgBoxPublish").fadeIn("slow");
+    var tagNumber = 0;
+    
+    while (tagNumber < headerFeedTags.length && false === foundFeedLink)
+    {
+        // if the feed tag field in data-array is set
+        if (undefined !== data[headerFeedTags[tagNumber]]) {
+            foundFeedLink = true;
+            
+            var subscriptionTopicUrl = data[headerFeedTags[tagNumber]];
+                                            
+            isSubscriptionTopicUrlResolvable(
+                subscriptionTopicUrl,
+                function(){ // If it is RESOLVEABLE
+                    $("#subscriptions").fadeIn("slow");
+                    $("#pubsub-subscriptions-msgBoxLinkedDataAndFeed").fadeIn("slow");
                     
-                    $("#pubsub-subscriptions-buttonPublish").click(function(){
-                        publishSubscriptionTopicUrl(
-                            standardPublishHubUrl,
-                            subscriptionTopicUrl,
-                            function(){
-                                $("#pubsub-subscriptions-msgBoxPublish").fadeOut("slow");
-                            }
-                        );
+                    // subscribe
+                    $("#pubsub-subscriptions-buttonSubscribe").click(function(){
+                        subscribe(subscriptionTopicUrl, "subscribe");
                     });
+                    
+                    // unsubscribe
+                    $("#pubsub-subscriptions-buttonUnSubscribe").click(function(){
+                        subscribe(subscriptionTopicUrl, "unsubscribe");
+                    });
+                    
+                    if (false == resourceInformation.isLinkedData 
+                        && true == resourceInformation.isLocalResource)
+                    {
+                        $("#pubsub-subscriptions-msgBoxPublish").fadeIn("slow");
+                        
+                        $("#pubsub-subscriptions-buttonPublish").click(function(){
+                            publishSubscriptionTopicUrl(
+                                standardPublishHubUrl,
+                                subscriptionTopicUrl,
+                                function(){
+                                    $("#pubsub-subscriptions-msgBoxPublish").fadeOut("slow");
+                                }
+                            );
+                        });
+                    }
                 }
-            }
-        );
+            );
+        }
+        tagNumber++;
     }
-    return returnValue;
+    return foundFeedLink;
 }
