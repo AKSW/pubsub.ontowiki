@@ -206,25 +206,6 @@ class PubSubHubbub_Subscription
         $this->_versioning->endAction();
 
         return $returnValue;
-        // old implementation
-        /*
-        $result = $this->_db->find($data['id']);
-        if (count($result)) {
-            $data['created_time'] = $result->current()->created_time;
-            $now = new Zend_Date;
-            if (isset($data['lease_seconds'])) {
-                $data['expiration_time'] = $now->add($data['lease_seconds'], Zend_Date:ECOND)
-                ->get('yyyy-MM-dd HH:mms');
-            }
-            $this->_db->update(
-                $data,
-                $this->_db->getAdapter()->quoteInto('id = ?', $data['id'])
-            );
-            return false;
-        }
-
-        $this->_db->insert($data);
-        return true;*/
     }
 
     /**
@@ -279,14 +260,6 @@ class PubSubHubbub_Subscription
             return $data;
         }
         return false;
-
-        // old implementation
-        /*
-        $result = $this->_db->find($key);
-        if (count($result)) {
-            return $result->current()->toArray();
-        }
-        return false;*/
     }
 
     /**
@@ -324,14 +297,6 @@ class PubSubHubbub_Subscription
             return true;
         else
             return false;
-
-        // old implementation
-        /*
-        $result = $this->_db->find($key);
-        if (count($result)) {
-            return true;
-        }
-        return false;*/
     }
 
     /**
@@ -401,17 +366,6 @@ class PubSubHubbub_Subscription
             return true;
         }
         return false;
-
-        // old implementation
-        /*
-        $result = $this->_db->find($key);
-        if (count($result)) {
-            $this->_db->delete(
-                $this->_db->getAdapter()->quoteInto('id = ?', $key)
-            );
-            return true;
-        }
-        return false;*/
     }
 
     /**
