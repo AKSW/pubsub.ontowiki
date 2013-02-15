@@ -52,28 +52,21 @@ class ModelOverviewModule extends OntoWiki_Module
 
     public function shouldShow()
     {
-        return $this->hasModelFeedUpdates();
+        $subscription = new PubSubHubbub_Subscription(
+            $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
+        );
+        
+         /**
+         * Check if resources from selected model have feed updates, only show 
+         * this module if there are feed updates.
+         */
+        return 0 == count($subscription->getFilesForFeedUpdates(
+            $this->_owApp->erfurt->getCacheDir()
+        )) ? false : true;
     }
 
     public function getContents()
     {                
         return $this->render('pubsub/modeloverview');
     }
-    
-    /**
-     * Check if resources from selected model have feed updates.
-     * @return bool True if there are feed updates, false otherwise.
-     */
-    public function hasModelFeedUpdates() 
-    {
-        $subscription = new PubSubHubbub_Subscription(
-            $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
-        );
-        
-        return 0 == count($subscription->getFilesForFeedUpdates(
-            $this->_owApp->erfurt->getCacheDir()
-        )) ? false : true;
-    }
 }
-
-
