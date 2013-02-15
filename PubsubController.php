@@ -8,11 +8,6 @@
 
 class PubsubController extends OntoWiki_Controller_Component
 {
-    /**
-     * New versioning type codes.
-     */
-    const VERSIONING_FEED_SYNC_ACTION_TYPE   = 3010;
-
     protected $_subscriptionModelInstance;
 
     public function init()
@@ -143,11 +138,9 @@ class PubsubController extends OntoWiki_Controller_Component
         $callback = new PubSubHubbub_Subscriber_Callback;
         $callback->setStorage($subscriptionStorage);
 
-        $callback->handle($this->_request->getParams());
-
-        // response to hub immediatly to avoid blocking the hub
-        $callback->sendResponse();
-
+        // handle request and immediatly send response, to avoid blocking the hub
+        $callback->handle($this->_request->getParams(), true);
+        
         if (true === $callback->hasFeedUpdate()) {
             $filePath = $this->_owApp->erfurt->getCacheDir() .
                         "pubsub_" .
@@ -176,7 +169,6 @@ class PubsubController extends OntoWiki_Controller_Component
             $event->subscriptionResourceProperties = $subscriptionResourceData['resourceProperties'];
             $event->trigger();
         }
-
     }
     /**
      * Publish Action
@@ -307,78 +299,31 @@ class PubsubController extends OntoWiki_Controller_Component
 
         $subscriptionId = $subscriptionStorage->getSubscriptionIdByResourceUri($r);
         $statements = array();
+        
         if (false !== $subscriptionId) {
+            
             // get and read cache dir
             $cacheFolder = $this->_owApp->erfurt->getCacheDir();
             $cacheFiles = scandir($cacheFolder);
 
             // go through all cachedir files
             foreach ($cacheFiles as $filename) {
+                // if its a pubsub file containg feed updates for $subscriptionId
                 if (false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')) {
-
-                    $xml = new SimpleXMLElement(file_get_contents($cacheFolder .'/'. $filename));
-
-                    // go through all entry-elements in the current file
-                    foreach ($xml->entry as $entry) {
-                        $namespaces = $entry->getNamespaces(true);
-                        $xhtml = $entry->content->children($namespaces['xhtml']);
-                        $divContent = json_decode((string) $xhtml->div);
-                        $statements[$divContent->id] = $divContent;
-                    }
+                    $statements = array_merge(
+                        $statements, 
+                        PubSubHubbub_FeedUpdate::getStatementListOutOfFeedUpdateFile(
+                            $cacheFolder .'/'. $filename
+                        )
+                    );
                 }
             }
-            if (0 < count($statements)) {
-                $erfurt = Erfurt_App::getInstance();
-                $versioning = $erfurt->getVersioning();
-                $actionSpec = array(
-                    'type'        => self::VERSIONING_FEED_SYNC_ACTION_TYPE,
-                    'modeluri'    => $model->getBaseUri(),
-                    'resourceuri' => $r
-                );
-
-                sort($statements);
-
-                // Start action
-                $versioning->startAction($actionSpec);
-
-                foreach ($statements as $statement) {
-                    if (0 < count($statement->added)) {
-                        $type = true == Erfurt_Uri::check($statement->added[0][2])
-                        ? 'uri'
-                        : 'literal';
-
-                        $model->addStatement(
-                            $statement->added[0][0],
-                            $statement->added[0][1],
-                            array('value' => $statement->added[0][2], 'type' => $type)
-                        );
-                    } elseif (0 < count($statement->deleted)) {
-                        $type = true == Erfurt_Uri::check($statement->deleted[0][2])
-                        ? 'uri'
-                        : 'literal';
-
-                        $deleteStatement = array(
-                            $statement->deleted[0][0] => array(
-                                $statement->deleted[0][1] => array(
-                                    array('value' => $statement->deleted[0][2], 'type' => $type)
-                                )
-                            )
-                        );
-                        $model->deleteMultipleStatements(
-                            $deleteStatement
-                        );
-                    }
-                }
-
-                $versioning->endAction();
-
-                //delete files
-                foreach ($cacheFiles as $filename) {
-                    if (false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')) {
-                        unlink($cacheFolder .'/'. $filename);
-                    }
-                }
-            }
+            
+            PubSubHubbub_FeedUpdate::importFeedUpdates($statements, $r, $model);
+            
+            PubSubHubbub_FeedUpdate::removeFeedUpdateFiles(
+                $cacheFiles, $subscriptionId, $cacheFolder
+            );
         }
         echo json_encode("true");
     }

@@ -96,26 +96,21 @@ class PubSubHubbub_Subscription
         }
         foreach ($data as $dataKey => $dataValue) {
             
-            // set conditions
-            $dataKeyNotEqualToResourceProperties = 'resourceProperties' != $dataKey;
-            $subResPropertiesSet = isset($subscriptionResourceProperties);
-            
-            $propertyMatching = isset($subscriptionResourceProperties[
-                $this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])
-            ][0]['content']);
-            
-            $dataValEqualToMatchedProperty = $dataValue != $subscriptionResourceProperties
-                [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])]
-                [0]
-                ['content'];
-            
-            // check conditions
-            if ( $dataKeyNotEqualToResourceProperties 
-                 && true == isset($dataValue) 
-                 &&
-                 (!$subResPropertiesSet 
-                   || (true == $propertyMatching && false == $dataValEqualToMatchedProperty))) {
-                       
+            if (('resourceProperties' != $dataKey) && isset($dataValue) &&
+                (!isset($subscriptionResourceProperties) ||
+                    (
+                        isset(
+                            $subscriptionResourceProperties[$this->_subscriptionConfig->get(
+                                $this->_propertyMatching[$dataKey]
+                            )][0]['content']
+                        ) &&
+                        $dataValue != $subscriptionResourceProperties
+                            [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])]
+                            [0]
+                            ['content']
+                    )
+                )
+            ) {
                 $addStatements[$subscriptionResourceUri]
                     [$this->_subscriptionConfig->get($this->_propertyMatching[$dataKey])] = array(
                         array(
