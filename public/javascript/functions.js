@@ -61,6 +61,17 @@ function importFeedUpdates(selectedResourceUri) {
     });
 }
 
+// import feed updates for all resources of the selected model
+function importFeedUpdatesForModelResources(callback) {
+    $.ajax({
+        url: urlBase + 'pubsub/importfeedupdatesformodelresources'
+    }).error(function ( xhr ) {
+    }).done(function ( data, textStatus, jqXHR ) {
+    }).success(function ( data, textStatus, jqXHR ){
+        callback(data);
+    });
+}
+
 // check if given subscription topic url is resolvable
 function isSubscriptionTopicUrlResolvable(subscriptionTopicUrl, callbackOnSuccess) {
     $.ajax({

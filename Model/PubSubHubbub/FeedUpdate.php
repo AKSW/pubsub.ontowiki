@@ -115,4 +115,12 @@ class PubSubHubbub_FeedUpdate
             }
         }
     }
+    
+    /**
+     *
+     */
+    public static function getSubscriptionIdOutOfFilename($filename) 
+    {
+        return substr($filename, 7, 32);
+    }
 }

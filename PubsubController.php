@@ -327,21 +327,60 @@ class PubsubController extends OntoWiki_Controller_Component
         }
         echo json_encode("true");
     }
-
+    
     /**
-     * Resource Action
+     *
      */
-    public function testAction()
+    public function importfeedupdatesformodelresourcesAction() 
     {
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
-
-        $subscriptionStorage = new PubSubHubbub_Subscription(
-            $this->_subscriptionModelInstance,
-            $this->_privateConfig->get('subscriptions')
+        
+        // Subscription instance of model for subscriptions
+        $subscriptionsModel = new PubSubHubbub_Subscription(
+            $this->_subscriptionModelInstance, $this->_privateConfig->get('subscriptions')
         );
-        $subscriptionStorage->deleteSubscription('22fee68d4206198fa6d983c25db0578d');
+        
+        // Subscription instance of selected model
+        $subscription = new PubSubHubbub_Subscription(
+            $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
+        );
+        
+        // get all related feed update files for the selected model
+        $feedUpdateFiles = $subscription->getFilesForFeedUpdates(
+            $this->_owApp->erfurt->getCacheDir()
+        );
+        
+        // save subscriptions config
+        $config = $this->_privateConfig->get('subscriptions');
+        
+        // cache folder
+        $cacheFolder = $this->_owApp->erfurt->getCacheDir();
+        $cacheFiles = scandir($cacheFolder);
+        
+        // go through all feed update files (starting with pubsub_)
+        foreach ( $feedUpdateFiles as $filename ) {
+            
+            // read file and generate add and delete statements
+            $statements = PubSubHubbub_FeedUpdate::getStatementListOutOfFeedUpdateFile(
+                $cacheFolder .'/'. $filename
+            );
+            
+            $subscriptionId = PubSubHubbub_FeedUpdate::getSubscriptionIdOutOfFilename($filename);
+            
+            $subscriptionProperties = $subscriptionsModel->getSubscription($subscriptionId);
+            
+            $resourceUri = $subscriptionProperties['resourceProperties'][$config->get('sourceResource')][0]['uri'];
+            
+            // execute statements in selected model
+            PubSubHubbub_FeedUpdate::importFeedUpdates($statements, $resourceUri, $this->_owApp->selectedModel);
+        }
+    
+        // remove all used feed update files
+        foreach ( $feedUpdateFiles as $filename ) {
+            unlink ($cacheFolder .'/'. $filename);
+        }
     }
 }
