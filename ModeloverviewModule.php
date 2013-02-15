@@ -66,52 +66,13 @@ class ModelOverviewModule extends OntoWiki_Module
      */
     public function hasModelFeedUpdates() 
     {
-        return 0 == count($this->getFilesForFeedUpdates()) ? false : true;
-    }
-    
-    /**
-     * Get a list of filenames related to any resource of the selected model.
-     * @return array List of filenames
-     */
-    public function getFilesForFeedUpdates() 
-    {
-        $files = scandir($this->_owApp->erfurt->getCacheDir());
-        
         $subscription = new PubSubHubbub_Subscription(
-            new Erfurt_Rdf_Model($this->_privateConfig->get('subscriptions')->get('modelUri')),
-            $this->_privateConfig->get('subscriptions')
+            $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
         );
         
-        $result = array ();
-        
-        // go through all files in the cache folder
-        foreach ($files as $cacheFile) {
-            // if current file is a pubsub feed update file
-            if('pubsub_' === substr($cacheFile, 0, 7)) {
-               
-               // extract hash from filename
-               $subscriptionHash = substr($cacheFile, 7, 32);
-               
-               $sourceResource = $subscription->getSourceResource($subscriptionHash);
-               
-               // there are feed updates for at least one resource in this model
-               if (true === $this->existsResourceInModel($sourceResource)) {
-                   $result [] = $cacheFile;
-               }
-            }
-        }
-        
-        return $result;
-    }
-    
-    /**
-     *
-     */
-    public function existsResourceInModel($sourceResource) 
-    {
-        return 0 == count($this->_owApp->selectedModel->sparqlQuery(
-            'SELECT ?o WHERE { <'. $sourceResource .'> ?p ?o. } LIMIT 1;')
-        ) ? false : true;
+        return 0 == count($subscription->getFilesForFeedUpdates(
+            $this->_owApp->erfurt->getCacheDir()
+        )) ? false : true;
     }
 }
 

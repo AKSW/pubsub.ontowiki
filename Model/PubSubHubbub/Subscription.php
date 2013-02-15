@@ -19,7 +19,7 @@ class PubSubHubbub_Subscription
 
     protected $_versioning;
 
-    protected $_subscriptionModelInstance;
+    protected $_selectedModelInstance;
     protected $_subscriptionConfig;
     protected $_propertyMatching = array(
         'id' => 'id',
@@ -37,10 +37,12 @@ class PubSubHubbub_Subscription
     {
         // avoid Zend table init
         $this->_subscriptionConfig = $subscriptionConfig;
-        $this->_subscriptionModelInstance = $subscriptionModelInstance;
+        $this->_selectedModelInstance = $subscriptionModelInstance;
+        $this->_subscriptionsModel = new Erfurt_Rdf_Model (
+            $this->_subscriptionConfig->get('modelUri')
+        );
 
-        $erfurt = Erfurt_App::getInstance();
-        $this->_versioning = $erfurt->getVersioning();
+        $this->_versioning = Erfurt_App::getInstance()->getVersioning();
     }
 
     /**
@@ -55,7 +57,7 @@ class PubSubHubbub_Subscription
     }
 
     /**
-     * function generate the statements array
+     * Generate the statements array
      * @param $subscriptionResourceUri
      * @param $data data array
      * @return array Statements Array
@@ -152,8 +154,8 @@ class PubSubHubbub_Subscription
         );
 
         $subscriptionResource = new OntoWiki_Model_Resource(
-            $this->_subscriptionModelInstance->getStore(),
-            $this->_subscriptionModelInstance,
+            $this->_selectedModelInstance->getStore(),
+            $this->_selectedModelInstance,
             $subscriptionResourceUri
         );
 
@@ -161,7 +163,7 @@ class PubSubHubbub_Subscription
 
         if (0 < count($subscriptionResourceProperties)) {
             $subscriptionResourceProperties = $subscriptionResourceProperties
-                [$this->_subscriptionModelInstance->getModelIri()];
+                [$this->_selectedModelInstance->getModelIri()];
             $data['created_time'] = $subscriptionResourceProperties
                 [$this->_subscriptionConfig->get($this->_propertyMatching['created_time'])][0]['content'];
             $now = new Zend_Date;
@@ -177,14 +179,14 @@ class PubSubHubbub_Subscription
 
             $versioningActionSpec = array(
                 'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
-                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
                 'resourceuri' => $subscriptionResourceUri
             );
             // Start action
             $this->_versioning->startAction($versioningActionSpec);
 
-            $this->_subscriptionModelInstance->addMultipleStatements($statements['addStatements']);
-            $this->_subscriptionModelInstance->deleteMultipleStatements($statements['deleteStatements']);
+            $this->_selectedModelInstance->addMultipleStatements($statements['addStatements']);
+            $this->_selectedModelInstance->deleteMultipleStatements($statements['deleteStatements']);
 
             $returnValue = false;
         } else {
@@ -192,13 +194,13 @@ class PubSubHubbub_Subscription
 
             $versioningActionSpec = array(
                 'type'        => self::VERSIONING_SUBSCRIPTION_ADD_ACTION_TYPE,
-                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
                 'resourceuri' => $subscriptionResourceUri
             );
             // Start action
             $this->_versioning->startAction($versioningActionSpec);
 
-            $this->_subscriptionModelInstance->addMultipleStatements($statements['addStatements']);
+            $this->_selectedModelInstance->addMultipleStatements($statements['addStatements']);
 
             $returnValue = true;
         }
@@ -206,6 +208,46 @@ class PubSubHubbub_Subscription
         $this->_versioning->endAction();
 
         return $returnValue;
+    }
+    
+    /**
+     * Check if there exists a resource for the given URL.
+     */
+    public function existsResourceInModel($resourceUri) 
+    {
+        return 0 == count($this->_selectedModelInstance->sparqlQuery(
+            'SELECT ?o WHERE { <'. $resourceUri .'> ?p ?o. } LIMIT 1;')
+        ) ? false : true;
+    }
+    
+    /**
+     * Get a list of filenames related to any resource of the selected model.
+     * @return array List of filenames
+     */
+    public function getFilesForFeedUpdates($cacheDir) 
+    {
+        $files = scandir($cacheDir);
+        
+        $result = array ();
+        
+        // go through all files in the cache folder
+        foreach ($files as $cacheFile) {
+            // if current file is a pubsub feed update file
+            if('pubsub_' === substr($cacheFile, 0, 7)) {
+               
+                // extract hash from filename
+                $subscriptionHash = substr($cacheFile, 7, 32);
+                
+                $sourceResource = $this->getSourceResource($subscriptionHash);
+                
+                // there are feed updates for at least one resource in this model
+                if (true === $this->existsResourceInModel($sourceResource)) {
+                    $result [] = $cacheFile;
+                }
+            }
+        }
+        
+        return $result;
     }
 
     /**
@@ -233,8 +275,8 @@ class PubSubHubbub_Subscription
         );
 
         $subscriptionResource = new OntoWiki_Model_Resource(
-            $this->_subscriptionModelInstance->getStore(),
-            $this->_subscriptionModelInstance,
+            $this->_selectedModelInstance->getStore(),
+            $this->_selectedModelInstance,
             $subscriptionResourceUri
         );
 
@@ -242,7 +284,7 @@ class PubSubHubbub_Subscription
 
         if (0 < count($subscriptionResourceProperties)) {
             $subscriptionResourceProperties = $subscriptionResourceProperties
-                [$this->_subscriptionModelInstance->getModelIri()];
+                [$this->_selectedModelInstance->getModelIri()];
             $data = array();
             $data['resourceProperties'] = $subscriptionResourceProperties;
             foreach ($this->_propertyMatching as $dataKey => $propertyKey) {
@@ -286,8 +328,8 @@ class PubSubHubbub_Subscription
         );
 
         $subscriptionResource = new OntoWiki_Model_Resource(
-            $this->_subscriptionModelInstance->getStore(),
-            $this->_subscriptionModelInstance,
+            $this->_selectedModelInstance->getStore(),
+            $this->_selectedModelInstance,
             $subscriptionResourceUri
         );
 
@@ -324,11 +366,11 @@ class PubSubHubbub_Subscription
             );
 
             $subscriptionResource = new OntoWiki_Model_Resource(
-                $this->_subscriptionModelInstance->getStore(),
-                $this->_subscriptionModelInstance,
+                $this->_selectedModelInstance->getStore(),
+                $this->_selectedModelInstance,
                 $subscriptionResourceUri
             );
-            $modelUri = $this->_subscriptionModelInstance->getBaseUri();
+            $modelUri = $this->_selectedModelInstance->getBaseUri();
             $subscriptionResourceProperties = $subscriptionResource->getValues();
             $subscriptionResourceProperties = $subscriptionResourceProperties[$modelUri];
 
@@ -351,13 +393,13 @@ class PubSubHubbub_Subscription
 
             $versioningActionSpec = array(
                 'type'        => self::VERSIONING_SUBSCRIPTION_DELETE_ACTION_TYPE,
-                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
                 'resourceuri' => $subscriptionResourceUri
             );
             // Start action
             $this->_versioning->startAction($versioningActionSpec);
 
-            $this->_subscriptionModelInstance->deleteMultipleStatements(
+            $this->_selectedModelInstance->deleteMultipleStatements(
                 $deleteStatements
             );
 
@@ -389,14 +431,14 @@ class PubSubHubbub_Subscription
 
         $versioningActionSpec = array(
                 'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
-                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
                 'resourceuri' => $subscriptionResourceUri
             );
 
         // Start action
         $this->_versioning->startAction($versioningActionSpec);
 
-        $this->_subscriptionModelInstance->addMultipleStatements($addStatements);
+        $this->_selectedModelInstance->addMultipleStatements($addStatements);
 
         $this->_versioning->endAction();
     }
@@ -422,14 +464,14 @@ class PubSubHubbub_Subscription
 
         $versioningActionSpec = array(
                 'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
-                'modeluri'    => $this->_subscriptionModelInstance->getBaseUri(),
+                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
                 'resourceuri' => $subscriptionResourceUri
             );
 
         // Start action
         $this->_versioning->startAction($versioningActionSpec);
 
-        $this->_subscriptionModelInstance->addMultipleStatements($addStatements);
+        $this->_selectedModelInstance->addMultipleStatements($addStatements);
 
         $this->_versioning->endAction();
     }
@@ -439,7 +481,7 @@ class PubSubHubbub_Subscription
      */
     public function getTopicByResourceUri($resourceUri)
     {
-        $results = $this->_subscriptionModelInstance->sparqlQuery(
+        $results = $this->_selectedModelInstance->sparqlQuery(
             'SELECT ?topicUrl
             WHERE {
               ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .
@@ -457,7 +499,7 @@ class PubSubHubbub_Subscription
      */
     public function getSubscriptionIdByResourceUri($resourceUri)
     {
-        $results = $this->_subscriptionModelInstance->sparqlQuery(
+        $results = $this->_selectedModelInstance->sparqlQuery(
             'SELECT ?subscriptionId
             WHERE {
               ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .
@@ -471,12 +513,12 @@ class PubSubHubbub_Subscription
     }
 
     /**
-     * get the source resource by hash
+     * Get the source resource by hash
      * @return string|null
      */
     public function getSourceResource($hash)
     {
-        $tmp = $this->_subscriptionModelInstance->sparqlQuery(
+        $tmp = $this->_subscriptionsModel->sparqlQuery(
             'SELECT ?sourceResource
             WHERE {
               ?subscriptionUri <' . $this->_subscriptionConfig->get('id') . '> "'. $hash .'" .
@@ -484,8 +526,6 @@ class PubSubHubbub_Subscription
             }
             LIMIT 1;'
         );
-        
-        $result = array ();
         
         foreach ($tmp as $entry) {
             return $entry['sourceResource'];

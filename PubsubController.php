@@ -217,9 +217,8 @@ class PubsubController extends OntoWiki_Controller_Component
     }
 
     /*
-     * check if a uri is LinkedData
+     * Check if an uri is LinkedData using Erfurt_Wrapper_LinkeddataWrapper
      */
-
     public function checkresourceAction()
     {
         // disable layout for Ajax requests
@@ -256,6 +255,9 @@ class PubsubController extends OntoWiki_Controller_Component
         $this->_response->appendBody(json_encode($result));
     }
 
+    /**
+     * Check if a given resource (r) has feed updates.
+     */
     public function existsfeedupdatesAction()
     {
         // disable layout for Ajax requests
@@ -286,6 +288,9 @@ class PubsubController extends OntoWiki_Controller_Component
         echo "false";
     }
 
+    /**
+     * Import feed updates for a given resource (r)
+     */
     public function importfeedupdatesAction()
     {
         // disable layout for Ajax requests
@@ -303,16 +308,17 @@ class PubsubController extends OntoWiki_Controller_Component
         $subscriptionId = $subscriptionStorage->getSubscriptionIdByResourceUri($r);
         $statements = array();
         if (false !== $subscriptionId) {
+            // get and read cache dir
             $cacheFolder = $this->_owApp->erfurt->getCacheDir();
             $cacheFiles = scandir($cacheFolder);
 
+            // go through all cachedir files
             foreach ($cacheFiles as $filename) {
                 if (false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')) {
 
-                    //$feed = Zend_Feed_Reader::importFile($cacheFolder .'/'. $filename);
-
                     $xml = new SimpleXMLElement(file_get_contents($cacheFolder .'/'. $filename));
 
+                    // go through all entry-elements in the current file
                     foreach ($xml->entry as $entry) {
                         $namespaces = $entry->getNamespaces(true);
                         $xhtml = $entry->content->children($namespaces['xhtml']);
