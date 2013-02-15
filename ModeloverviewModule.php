@@ -35,6 +35,14 @@ class ModelOverviewModule extends OntoWiki_Module
             DIRECTORY_SEPARATOR .
             PATH_SEPARATOR
         );
+        
+        // include javascript files
+        $basePath = $this->_config->staticUrlBase . 'extensions/pubsub/';
+        $baseJavascriptPath = $basePath .'public/javascript/';
+        
+        $this->view->headScript()
+            ->prependFile($baseJavascriptPath. 'functions.js', 'text/javascript')
+            ->prependFile($baseJavascriptPath. 'modeloverview.js', 'text/javascript');
     }
 
     public function getTitle()
@@ -48,22 +56,35 @@ class ModelOverviewModule extends OntoWiki_Module
     }
 
     public function getContents()
-    {
+    {                
         return $this->render('pubsub/modeloverview');
     }
     
     /**
-     *
+     * Check if resources from selected model have feed updates.
+     * @return bool True if there are feed updates, false otherwise.
      */
     public function hasModelFeedUpdates() 
     {
+        return 0 == count($this->getFilesForFeedUpdates()) ? false : true;
+    }
+    
+    /**
+     * Get a list of filenames related to any resource of the selected model.
+     * @return array List of filenames
+     */
+    public function getFilesForFeedUpdates() 
+    {
         $files = scandir($this->_owApp->erfurt->getCacheDir());
-        $result = array ();
+        
         $subscription = new PubSubHubbub_Subscription(
             new Erfurt_Rdf_Model($this->_privateConfig->get('subscriptions')->get('modelUri')),
             $this->_privateConfig->get('subscriptions')
         );
         
+        $result = array ();
+        
+        // go through all files in the cache folder
         foreach ($files as $cacheFile) {
             // if current file is a pubsub feed update file
             if('pubsub_' === substr($cacheFile, 0, 7)) {
@@ -75,12 +96,12 @@ class ModelOverviewModule extends OntoWiki_Module
                
                // there are feed updates for at least one resource in this model
                if (true === $this->existsResourceInModel($sourceResource)) {
-                   return true;
+                   $result [] = $cacheFile;
                }
             }
         }
         
-        return false;
+        return $result;
     }
     
     /**
