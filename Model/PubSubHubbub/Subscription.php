@@ -11,16 +11,30 @@ class PubSubHubbub_Subscription
     implements Zend_Feed_Pubsubhubbub_Model_SubscriptionInterface
 {
     /**
-     * New versioning type codes.
+     * Versioning type codes, using in history feed for rollback
      */
     const VERSIONING_SUBSCRIPTION_ADD_ACTION_TYPE      = 3110;
     const VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE   = 3120;
     const VERSIONING_SUBSCRIPTION_DELETE_ACTION_TYPE   = 3130;
 
+    /**
+     * Reference to Erfurt Versioning 
+     */
     protected $_versioning;
 
+    /**
+     * Instance of the selected model
+     */
     protected $_selectedModelInstance;
+    
+    /**
+     * Configuration from doap.n3
+     */
     protected $_subscriptionConfig;
+    
+    /**
+     * Array containing matchings for keys
+     */
     protected $_propertyMatching = array(
         'id' => 'id',
         'topic_url' => 'topicUrl',
@@ -33,11 +47,16 @@ class PubSubHubbub_Subscription
         'subscription_state' => 'subscriptionState'
     );
 
-    public function __construct ($subscriptionModelInstance, $subscriptionConfig)
+    /**
+     * Constructor
+     * @param $selectedModelInstance Selected model instance
+     * @param $subscriptionConfig Configuration from doap.n3
+     */
+    public function __construct ($selectedModelInstance, $subscriptionConfig)
     {
         // avoid Zend table init
         $this->_subscriptionConfig = $subscriptionConfig;
-        $this->_selectedModelInstance = $subscriptionModelInstance;
+        $this->_selectedModelInstance = $selectedModelInstance;
         $this->_subscriptionsModel = new Erfurt_Rdf_Model (
             $this->_subscriptionConfig->get('modelUri')
         );
@@ -133,81 +152,71 @@ class PubSubHubbub_Subscription
         $returnArray['deleteStatements'] = $deleteStatements;
         return $returnArray;
     }
-
+    
     /**
+     * function save the subscribing user uri to the subscription
      */
-    public function setSubscription(array $data)
+    public function addSubscribingUserUri($key, $subscribingUserUri)
     {
-        $returnValue = false;
-
-        if (!isset($data['id'])) {
-            require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
-            throw new Zend_Feed_Pubsubhubbub_Exception(
-                'ID must be set before attempting a save'
-            );
-        }
-
         // generate uri with topic_url and hub_url
         $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
             $this->_subscriptionConfig->get('classUri'),
-            $data['id']
+            $key
         );
-
-        $subscriptionResource = new OntoWiki_Model_Resource(
-            $this->_selectedModelInstance->getStore(),
-            $this->_selectedModelInstance,
-            $subscriptionResourceUri
-        );
-
-        $subscriptionResourceProperties = $subscriptionResource->getValues();
-
-        if (0 < count($subscriptionResourceProperties)) {
-            $subscriptionResourceProperties = $subscriptionResourceProperties
-                [$this->_selectedModelInstance->getModelIri()];
-            $data['created_time'] = $subscriptionResourceProperties
-                [$this->_subscriptionConfig->get($this->_propertyMatching['created_time'])][0]['content'];
-            $now = new Zend_Date;
-            if (isset($data['lease_seconds'])) {
-                $data['expiration_time'] = $now->add($data['lease_seconds'], Zend_Date::SECOND)
-                ->get('yyyy-MM-dd HH:mms');
-            }
-            $statements = $this->_generateStatements(
-                $subscriptionResourceUri,
-                $data,
-                $subscriptionResourceProperties
+        $addStatements = array();
+        $addStatements[$subscriptionResourceUri] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('subscribingUser')] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('subscribingUser')][]
+            = array(
+                'value' => $subscribingUserUri,
+                'type' => 'uri'
             );
 
-            $versioningActionSpec = array(
+        $versioningActionSpec = array(
                 'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
                 'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
                 'resourceuri' => $subscriptionResourceUri
             );
-            // Start action
-            $this->_versioning->startAction($versioningActionSpec);
 
-            $this->_selectedModelInstance->addMultipleStatements($statements['addStatements']);
-            $this->_selectedModelInstance->deleteMultipleStatements($statements['deleteStatements']);
+        // Start action
+        $this->_versioning->startAction($versioningActionSpec);
 
-            $returnValue = false;
-        } else {
-            $statements = $this->_generateStatements($subscriptionResourceUri, $data);
+        $this->_selectedModelInstance->addMultipleStatements($addStatements);
 
-            $versioningActionSpec = array(
-                'type'        => self::VERSIONING_SUBSCRIPTION_ADD_ACTION_TYPE,
+        $this->_versioning->endAction();
+    }
+
+    /**
+     * function save the resource uri to the subscription
+     */
+    public function addSourceResourceUri($key, $resourceUri)
+    {
+        // generate uri with topic_url and hub_url
+        $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
+            $this->_subscriptionConfig->get('classUri'),
+            $key
+        );
+        $addStatements = array();
+        $addStatements[$subscriptionResourceUri] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('sourceResource')] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('sourceResource')][]
+            = array(
+                'value' => $resourceUri,
+                'type' => 'uri'
+            );
+
+        $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
                 'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
                 'resourceuri' => $subscriptionResourceUri
             );
-            // Start action
-            $this->_versioning->startAction($versioningActionSpec);
 
-            $this->_selectedModelInstance->addMultipleStatements($statements['addStatements']);
+        // Start action
+        $this->_versioning->startAction($versioningActionSpec);
 
-            $returnValue = true;
-        }
+        $this->_selectedModelInstance->addMultipleStatements($addStatements);
 
         $this->_versioning->endAction();
-
-        return $returnValue;
     }
     
     /**
@@ -305,43 +314,6 @@ class PubSubHubbub_Subscription
     }
 
     /**
-     * Determine if a subscription matching the key exists
-     *
-     * @param  string $key
-     * @return bool
-     */
-    public function hasSubscription($key)
-    {
-        if (empty($key) || !is_string($key)) {
-            require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
-            throw new Zend_Feed_Pubsubhubbub_Exception(
-                'Invalid parameter "key"' .
-                ' of "' .
-                $key .
-                '" must be a non-empty string'
-            );
-        }
-        // generate uri with topic_url and hub_url
-        $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
-            $this->_subscriptionConfig->get('classUri'),
-            $key
-        );
-
-        $subscriptionResource = new OntoWiki_Model_Resource(
-            $this->_selectedModelInstance->getStore(),
-            $this->_selectedModelInstance,
-            $subscriptionResourceUri
-        );
-
-        $subscriptionResourceProperties = $subscriptionResource->getValues();
-
-        if (0 < count($subscriptionResourceProperties))
-            return true;
-        else
-            return false;
-    }
-
-    /**
      * Delete a subscription
      *
      * @param string $key
@@ -409,109 +381,44 @@ class PubSubHubbub_Subscription
         }
         return false;
     }
-
+    
     /**
-     * function save the resource uri to the subscription
+     * Determine if a subscription matching the key exists
+     *
+     * @param  string $key
+     * @return bool
      */
-    public function addSourceResourceUri($key, $resourceUri)
+    public function hasSubscription($key)
     {
+        if (empty($key) || !is_string($key)) {
+            require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
+            throw new Zend_Feed_Pubsubhubbub_Exception(
+                'Invalid parameter "key"' .
+                ' of "' .
+                $key .
+                '" must be a non-empty string'
+            );
+        }
         // generate uri with topic_url and hub_url
         $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
             $this->_subscriptionConfig->get('classUri'),
             $key
         );
-        $addStatements = array();
-        $addStatements[$subscriptionResourceUri] = array();
-        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('sourceResource')] = array();
-        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('sourceResource')][]
-            = array(
-                'value' => $resourceUri,
-                'type' => 'uri'
-            );
 
-        $versioningActionSpec = array(
-                'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
-                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
-                'resourceuri' => $subscriptionResourceUri
-            );
-
-        // Start action
-        $this->_versioning->startAction($versioningActionSpec);
-
-        $this->_selectedModelInstance->addMultipleStatements($addStatements);
-
-        $this->_versioning->endAction();
-    }
-
-    /**
-     * function save the subscribing user uri to the subscription
-     */
-    public function addSubscribingUserUri($key, $subscribingUserUri)
-    {
-        // generate uri with topic_url and hub_url
-        $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
-            $this->_subscriptionConfig->get('classUri'),
-            $key
+        $subscriptionResource = new OntoWiki_Model_Resource(
+            $this->_selectedModelInstance->getStore(),
+            $this->_selectedModelInstance,
+            $subscriptionResourceUri
         );
-        $addStatements = array();
-        $addStatements[$subscriptionResourceUri] = array();
-        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('subscribingUser')] = array();
-        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('subscribingUser')][]
-            = array(
-                'value' => $subscribingUserUri,
-                'type' => 'uri'
-            );
 
-        $versioningActionSpec = array(
-                'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
-                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
-                'resourceuri' => $subscriptionResourceUri
-            );
+        $subscriptionResourceProperties = $subscriptionResource->getValues();
 
-        // Start action
-        $this->_versioning->startAction($versioningActionSpec);
-
-        $this->_selectedModelInstance->addMultipleStatements($addStatements);
-
-        $this->_versioning->endAction();
-    }
-
-    /**
-     * get the topic url for a given resource uri
-     */
-    public function getTopicByResourceUri($resourceUri)
-    {
-        $results = $this->_selectedModelInstance->sparqlQuery(
-            'SELECT ?topicUrl
-            WHERE {
-              ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .
-              ?subscriptionUri <' . $this->_subscriptionConfig->get('topicUrl') . '> ?topicUrl .
-            }'
-        );
-        if (0 < count($results))
-            return $results[0]['topicUrl'];
+        if (0 < count($subscriptionResourceProperties))
+            return true;
         else
             return false;
     }
-
-    /**
-     * get the topic url for a given resource uri
-     */
-    public function getSubscriptionIdByResourceUri($resourceUri)
-    {
-        $results = $this->_selectedModelInstance->sparqlQuery(
-            'SELECT ?subscriptionId
-            WHERE {
-              ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .
-              ?subscriptionUri <' . $this->_subscriptionConfig->get('id') . '> ?subscriptionId .
-            }'
-        );
-        if (0 < count($results))
-            return $results[0]['subscriptionId'];
-        else
-            return false;
-    }
-
+    
     /**
      * Get the source resource by hash
      * @return string|null
@@ -532,5 +439,120 @@ class PubSubHubbub_Subscription
         }
         
         return null;
+    }
+
+    /**
+     * get the topic url for a given resource uri
+     */
+    public function getSubscriptionIdByResourceUri($resourceUri)
+    {
+        $results = $this->_selectedModelInstance->sparqlQuery(
+            'SELECT ?subscriptionId
+            WHERE {
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('id') . '> ?subscriptionId .
+            }'
+        );
+        if (0 < count($results))
+            return $results[0]['subscriptionId'];
+        else
+            return false;
+    }
+    
+    /**
+     * get the topic url for a given resource uri
+     */
+    public function getTopicByResourceUri($resourceUri)
+    {
+        $results = $this->_selectedModelInstance->sparqlQuery(
+            'SELECT ?topicUrl
+            WHERE {
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('sourceResource') . '> <' . $resourceUri . '> .
+              ?subscriptionUri <' . $this->_subscriptionConfig->get('topicUrl') . '> ?topicUrl .
+            }'
+        );
+        if (0 < count($results))
+            return $results[0]['topicUrl'];
+        else
+            return false;
+    }
+    
+    /**
+     * Create a new subscription
+     * @param $data Array of values for the new subscription
+     * @return bool True if creation went fine, false otherwise.
+     */
+    public function setSubscription(array $data)
+    {
+        $returnValue = false;
+
+        if (!isset($data['id'])) {
+            require_once 'Zend/Feed/Pubsubhubbub/Exception.php';
+            throw new Zend_Feed_Pubsubhubbub_Exception(
+                'ID must be set before attempting a save'
+            );
+        }
+
+        // generate uri with topic_url and hub_url
+        $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
+            $this->_subscriptionConfig->get('classUri'),
+            $data['id']
+        );
+
+        $subscriptionResource = new OntoWiki_Model_Resource(
+            $this->_selectedModelInstance->getStore(),
+            $this->_selectedModelInstance,
+            $subscriptionResourceUri
+        );
+
+        $subscriptionResourceProperties = $subscriptionResource->getValues();
+
+        if (0 < count($subscriptionResourceProperties)) {
+            $subscriptionResourceProperties = $subscriptionResourceProperties
+                [$this->_selectedModelInstance->getModelIri()];
+            $data['created_time'] = $subscriptionResourceProperties
+                [$this->_subscriptionConfig->get($this->_propertyMatching['created_time'])][0]['content'];
+            $now = new Zend_Date;
+            if (isset($data['lease_seconds'])) {
+                $data['expiration_time'] = $now->add($data['lease_seconds'], Zend_Date::SECOND)
+                ->get('yyyy-MM-dd HH:mms');
+            }
+            $statements = $this->_generateStatements(
+                $subscriptionResourceUri,
+                $data,
+                $subscriptionResourceProperties
+            );
+
+            $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
+                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
+                'resourceuri' => $subscriptionResourceUri
+            );
+            // Start action
+            $this->_versioning->startAction($versioningActionSpec);
+
+            $this->_selectedModelInstance->addMultipleStatements($statements['addStatements']);
+            $this->_selectedModelInstance->deleteMultipleStatements($statements['deleteStatements']);
+
+            $returnValue = false;
+        } else {
+            $statements = $this->_generateStatements($subscriptionResourceUri, $data);
+
+            $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_ADD_ACTION_TYPE,
+                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
+                'resourceuri' => $subscriptionResourceUri
+            );
+            // Start action
+            $this->_versioning->startAction($versioningActionSpec);
+
+            $this->_selectedModelInstance->addMultipleStatements($statements['addStatements']);
+
+            $returnValue = true;
+        }
+
+        $this->_versioning->endAction();
+
+        return $returnValue;
     }
 }
