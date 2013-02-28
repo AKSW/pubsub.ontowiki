@@ -136,4 +136,20 @@ class PubSubHubbub_Subscriber
         }
     }
 
+    /**
+     * save iri of that model where the current resource is located in
+     */
+    public function addModelIri($modelIri)
+    {
+        $hubs = $this->getHubUrls();
+
+        foreach ($hubs as $hubUrl) {
+            $params = array(
+                'hub.topic' => $this->getTopicUrl(),
+            );
+            $key = $this->_generateSubscriptionKey($params, $hubUrl);
+            $this->_storage->addModelIri($key, $modelIri);
+        }
+    }
+
 }

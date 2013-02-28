@@ -76,6 +76,7 @@ class PubsubController extends OntoWiki_Controller_Component
         $sourceResource = $this->getParam('sourceResource');
 
         $subscribingUserUri = $this->_owApp->getUser()->getUri();
+        $subscriptionModelIri = $this->_owApp->selectedModel->getModelIri();
 
         if ("" != $hubUrl && "" != $topicUrl && "" != $callBackUrl) {
             $subscriber = new PubSubHubbub_Subscriber;
@@ -85,16 +86,30 @@ class PubsubController extends OntoWiki_Controller_Component
             $subscriber->setCallbackUrl($callBackUrl);
             $subscriber->setPreferredVerificationMode($verifyMode);
 
-            // check subscribtion mode
+            /**
+             * Subscribe
+             */
             if ("subscribe" == $subscriptionMode) {
                 $subscriber->subscribeAll();
                 if ("" != $sourceResource)
                     $subscriber->addSourceResourceUri($sourceResource);
                 if ("" != $subscribingUserUri)
                     $subscriber->addSubscribingUserUri($subscribingUserUri);
-            } else if ("unsubscribe" == $subscriptionMode)
+                
+                // add model iri to the subscription
+                $subscriber->addModelIri($subscriptionModelIri);
+                
+            /**
+             * Unsubscribe
+             */
+            } else if ("unsubscribe" == $subscriptionMode) {
                 $subscriber->unsubscribeAll();
-            else {
+                
+            
+            /**
+             * Something went wrong!
+             */
+            } else {
                 echo 'FAILURE: missing parameter';
                 $this->_response->setHttpResponseCode(500);
                 return;
@@ -165,6 +180,7 @@ class PubsubController extends OntoWiki_Controller_Component
             $subscriptionResourceData = $subscriptionStorage->getSubscription(
                 $this->_request->getParam('xhub_subscription')
             );
+            
             $event = new Erfurt_Event('onFeedUpdate');
             $event->subscriptionResourceProperties = $subscriptionResourceData['resourceProperties'];
             $event->trigger();

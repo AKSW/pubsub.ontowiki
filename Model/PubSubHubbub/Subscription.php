@@ -186,6 +186,39 @@ class PubSubHubbub_Subscription
 
         $this->_versioning->endAction();
     }
+    
+    /**
+     * save IRI of the model where the resource for this subscription is located in
+     */
+    public function addModelIri($key, $modelIri)
+    {
+        // generate uri with topic_url and hub_url
+        $subscriptionResourceUri = $this->_generateSubscriptionResourceUri(
+            $this->_subscriptionConfig->get('classUri'),
+            $key
+        );
+        $addStatements = array();
+        $addStatements[$subscriptionResourceUri] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('modelIri')] = array();
+        $addStatements[$subscriptionResourceUri][$this->_subscriptionConfig->get('modelIri')][]
+            = array(
+                'value' => $modelIri,
+                'type' => 'uri'
+            );
+
+        $versioningActionSpec = array(
+                'type'        => self::VERSIONING_SUBSCRIPTION_UPDATE_ACTION_TYPE,
+                'modeluri'    => $this->_selectedModelInstance->getBaseUri(),
+                'resourceuri' => $subscriptionResourceUri
+            );
+
+        // Start transaction
+        $this->_versioning->startAction($versioningActionSpec);
+
+        $this->_selectedModelInstance->addMultipleStatements($addStatements);
+
+        $this->_versioning->endAction();
+    }
 
     /**
      * function save the resource uri to the subscription
