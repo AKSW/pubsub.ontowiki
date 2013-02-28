@@ -52,14 +52,18 @@ class ModelOverviewModule extends OntoWiki_Module
 
     public function shouldShow()
     {
-        $subscription = new PubSubHubbub_Subscription(
-            $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
-        );
+        // stop if model is not editable
+        if (false == OntoWiki::getInstance()->selectedModel->isEditable()) {
+            return false;
+        }
         
-         /**
+        /**
          * Check if resources from selected model have feed updates, only show 
          * this module if there are feed updates.
          */
+        $subscription = new PubSubHubbub_Subscription(
+            $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
+        );
         return 0 == count($subscription->getFilesForFeedUpdates(
             $this->_owApp->erfurt->getCacheDir()
         )) ? false : true;

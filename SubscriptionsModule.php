@@ -77,7 +77,8 @@ class SubscriptionsModule extends OntoWiki_Module
 
     public function shouldShow()
     {
-        return true;
+        // stop if model is not editable
+        return OntoWiki::getInstance()->selectedModel->isEditable();
     }
 
     public function getContents()
