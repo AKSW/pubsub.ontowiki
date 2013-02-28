@@ -156,6 +156,7 @@ class PubsubController extends OntoWiki_Controller_Component
         // handle request and immediatly send response, to avoid blocking the hub
         $callback->handle($this->_request->getParams(), true);
         
+        // if hub sends you a couple of feed updates
         if (true === $callback->hasFeedUpdate()) {
             $filePath = $this->_owApp->erfurt->getCacheDir() .
                         "pubsub_" .
@@ -181,8 +182,31 @@ class PubsubController extends OntoWiki_Controller_Component
                 $this->_request->getParam('xhub_subscription')
             );
             
+            /**
+             * Throw Erfurt_Event
+             */
             $event = new Erfurt_Event('onFeedUpdate');
+            
+            // attach some information to the event
+            $event->autoInsertFeedUpdates = 'true' == $this->_privateConfig
+                ->get('subscriptions')
+                ->get('autoInsertFeedUpdates') ? true : false;
+            $event->feedUpdateFilePath = $filePath;
+            $event->feedUpdates = $callback->getFeedUpdate();
+            
+            // extract model iri from subscription entry in subscriptions model
+            $modelIri = $subscriptionResourceData
+                ['resourceProperties']
+                [$this->_privateConfig->get('subscriptions')->get('modelIri')]
+                [0]['uri'];
+            $event->modelInstance = new Erfurt_Rdf_Model($modelIri);
+            
+            $event->sourceResource = $subscriptionStorage->getSourceResource(
+                $this->_request->getParam('xhub_subscription')
+            );
             $event->subscriptionResourceProperties = $subscriptionResourceData['resourceProperties'];
+                
+            // trigger the event
             $event->trigger();
         }
     }

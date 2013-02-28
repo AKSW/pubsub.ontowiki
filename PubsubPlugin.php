@@ -31,6 +31,23 @@ class PubsubPlugin extends OntoWiki_Plugin
      */
     public function onFeedUpdate($event)
     {
-
+        // if user want to auto insert incoming feed updates
+        if(true == $event->autoInsertFeedUpdates) {
+            
+            // read statements from created file and build an array
+            $statements = PubSubHubbub_FeedUpdate::getStatementListOutOfFeedUpdateFile(
+                $event->feedUpdateFilePath
+            );            
+            
+            // import all statements of the built array into the model
+            PubSubHubbub_FeedUpdate::importFeedUpdates(
+                $statements, 
+                $event->sourceResource,
+                $event->modelInstance
+            );
+            
+            // remove file with feed updates
+            unlink($event->feedUpdateFilePath);
+        }
     }
 }

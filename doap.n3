@@ -35,6 +35,9 @@
     # Otherwise your are free to use your own callback url here (full, not relative!)
     :callbackUrl "";
     
+    # If it is set to true, feed updates will be automatically imported
+    :autoInsertFeedUpdates "false";
+    
     :modelUri "http://localhost/PubSub/Subscriptions/";
     :classUri "http://localhost/PubSub/Subscription/" ;
     :id "http://localhost/PubSub/id/" ;
