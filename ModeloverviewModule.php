@@ -35,11 +35,11 @@ class ModelOverviewModule extends OntoWiki_Module
             DIRECTORY_SEPARATOR .
             PATH_SEPARATOR
         );
-        
+
         // include javascript files
         $basePath = $this->_config->staticUrlBase . 'extensions/pubsub/';
         $baseJavascriptPath = $basePath .'public/javascript/';
-        
+
         $this->view->headScript()
             ->prependFile($baseJavascriptPath. 'functions.js', 'text/javascript')
             ->prependFile($baseJavascriptPath. 'modeloverview.js', 'text/javascript');
@@ -56,21 +56,23 @@ class ModelOverviewModule extends OntoWiki_Module
         if (false == OntoWiki::getInstance()->selectedModel->isEditable()) {
             return false;
         }
-        
+
         /**
-         * Check if resources from selected model have feed updates, only show 
+         * Check if resources from selected model have feed updates, only show
          * this module if there are feed updates.
          */
         $subscription = new PubSubHubbub_Subscription(
             $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
         );
-        return 0 == count($subscription->getFilesForFeedUpdates(
-            $this->_owApp->erfurt->getCacheDir()
-        )) ? false : true;
+        return 0 == count(
+            $subscription->getFilesForFeedUpdates(
+                $this->_owApp->erfurt->getCacheDir()
+            )
+        ) ? false : true;
     }
 
     public function getContents()
-    {                
+    {
         return $this->render('pubsub/modeloverview');
     }
 }

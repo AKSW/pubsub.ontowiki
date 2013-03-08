@@ -95,17 +95,16 @@ class PubsubController extends OntoWiki_Controller_Component
                     $subscriber->addSourceResourceUri($sourceResource);
                 if ("" != $subscribingUserUri)
                     $subscriber->addSubscribingUserUri($subscribingUserUri);
-                
+
                 // add model iri to the subscription
                 $subscriber->addModelIri($subscriptionModelIri);
-                
+
             /**
              * Unsubscribe
              */
             } else if ("unsubscribe" == $subscriptionMode) {
                 $subscriber->unsubscribeAll();
-                
-            
+
             /**
              * Something went wrong!
              */
@@ -155,7 +154,7 @@ class PubsubController extends OntoWiki_Controller_Component
 
         // handle request and immediatly send response, to avoid blocking the hub
         $callback->handle($this->_request->getParams(), true);
-        
+
         // if hub sends you a couple of feed updates
         if (true === $callback->hasFeedUpdate()) {
             $filePath = $this->_owApp->erfurt->getCacheDir() .
@@ -181,31 +180,31 @@ class PubsubController extends OntoWiki_Controller_Component
             $subscriptionResourceData = $subscriptionStorage->getSubscription(
                 $this->_request->getParam('xhub_subscription')
             );
-            
+
             /**
              * Throw Erfurt_Event
              */
             $event = new Erfurt_Event('onFeedUpdate');
-            
+
             // attach some information to the event
             $event->autoInsertFeedUpdates = 'true' == $this->_privateConfig
                 ->get('subscriptions')
                 ->get('autoInsertFeedUpdates') ? true : false;
             $event->feedUpdateFilePath = $filePath;
             $event->feedUpdates = $callback->getFeedUpdate();
-            
+
             // extract model iri from subscription entry in subscriptions model
             $modelIri = $subscriptionResourceData
                 ['resourceProperties']
                 [$this->_privateConfig->get('subscriptions')->get('modelIri')]
                 [0]['uri'];
             $event->modelInstance = new Erfurt_Rdf_Model($modelIri);
-            
+
             $event->sourceResource = $subscriptionStorage->getSourceResource(
                 $this->_request->getParam('xhub_subscription')
             );
             $event->subscriptionResourceProperties = $subscriptionResourceData['resourceProperties'];
-                
+
             // trigger the event
             $event->trigger();
         }
@@ -339,9 +338,9 @@ class PubsubController extends OntoWiki_Controller_Component
 
         $subscriptionId = $subscriptionStorage->getSubscriptionIdByResourceUri($r);
         $statements = array();
-        
+
         if (false !== $subscriptionId) {
-            
+
             // get and read cache dir
             $cacheFolder = $this->_owApp->erfurt->getCacheDir();
             $cacheFiles = scandir($cacheFolder);
@@ -351,76 +350,76 @@ class PubsubController extends OntoWiki_Controller_Component
                 // if its a pubsub file containg feed updates for $subscriptionId
                 if (false !== strpos($filename, 'pubsub_'.$subscriptionId .'_')) {
                     $statements = array_merge(
-                        $statements, 
+                        $statements,
                         PubSubHubbub_FeedUpdate::getStatementListOutOfFeedUpdateFile(
                             $cacheFolder .'/'. $filename
                         )
                     );
                 }
             }
-            
+
             PubSubHubbub_FeedUpdate::importFeedUpdates($statements, $r, $model);
-            
+
             PubSubHubbub_FeedUpdate::removeFeedUpdateFiles(
                 $cacheFiles, $subscriptionId, $cacheFolder
             );
         }
         echo json_encode("true");
     }
-    
+
     /**
      *
      */
-    public function importfeedupdatesformodelresourcesAction() 
+    public function importfeedupdatesformodelresourcesAction()
     {
         // disable layout for Ajax requests
         $this->_helper->layout()->disableLayout();
         // disable rendering
         $this->_helper->viewRenderer->setNoRender();
-        
+
         // Subscription instance of model for subscriptions
         $subscriptionsModel = new PubSubHubbub_Subscription(
             $this->_subscriptionModelInstance, $this->_privateConfig->get('subscriptions')
         );
-        
+
         // Subscription instance of selected model
         $subscription = new PubSubHubbub_Subscription(
             $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
         );
-        
+
         // get all related feed update files for the selected model
         $feedUpdateFiles = $subscription->getFilesForFeedUpdates(
             $this->_owApp->erfurt->getCacheDir()
         );
-        
+
         // save subscriptions config
         $config = $this->_privateConfig->get('subscriptions');
-        
+
         // cache folder
         $cacheFolder = $this->_owApp->erfurt->getCacheDir();
         $cacheFiles = scandir($cacheFolder);
-        
+
         // go through all feed update files (starting with pubsub_)
         foreach ( $feedUpdateFiles as $filename ) {
-            
+
             // read file and generate add and delete statements
             $statements = PubSubHubbub_FeedUpdate::getStatementListOutOfFeedUpdateFile(
                 $cacheFolder .'/'. $filename
             );
-            
+
             $subscriptionId = PubSubHubbub_FeedUpdate::getSubscriptionIdOutOfFilename($filename);
-            
+
             $subscriptionProperties = $subscriptionsModel->getSubscription($subscriptionId);
-            
+
             $resourceUri = $subscriptionProperties['resourceProperties'][$config->get('sourceResource')][0]['uri'];
-            
+
             // execute statements in selected model
             PubSubHubbub_FeedUpdate::importFeedUpdates($statements, $resourceUri, $this->_owApp->selectedModel);
         }
-    
+
         // remove all used feed update files
-        foreach ( $feedUpdateFiles as $filename ) {
-            unlink ($cacheFolder .'/'. $filename);
+        foreach ($feedUpdateFiles as $filename) {
+            unlink($cacheFolder .'/'. $filename);
         }
     }
 }

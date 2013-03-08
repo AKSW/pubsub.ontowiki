@@ -18,7 +18,7 @@ class PubSubHubbub_Subscription
     const VERSIONING_SUBSCRIPTION_DELETE_ACTION_TYPE   = 3130;
 
     /**
-     * Reference to Erfurt Versioning 
+     * Reference to Erfurt Versioning
      */
     protected $_versioning;
 
@@ -26,12 +26,12 @@ class PubSubHubbub_Subscription
      * Instance of the selected model
      */
     protected $_selectedModelInstance;
-    
+
     /**
      * Configuration from doap.n3
      */
     protected $_subscriptionConfig;
-    
+
     /**
      * Array containing matchings for keys
      */
@@ -57,7 +57,7 @@ class PubSubHubbub_Subscription
         // avoid Zend table init
         $this->_subscriptionConfig = $subscriptionConfig;
         $this->_selectedModelInstance = $selectedModelInstance;
-        $this->_subscriptionsModel = new Erfurt_Rdf_Model (
+        $this->_subscriptionsModel = new Erfurt_Rdf_Model(
             $this->_subscriptionConfig->get('modelUri')
         );
 
@@ -95,7 +95,7 @@ class PubSubHubbub_Subscription
                 );
         }
         foreach ($data as $dataKey => $dataValue) {
-            
+
             if (('resourceProperties' != $dataKey) && isset($dataValue) &&
                 (!isset($subscriptionResourceProperties) ||
                     (
@@ -153,7 +153,7 @@ class PubSubHubbub_Subscription
         $returnArray['deleteStatements'] = $deleteStatements;
         return $returnArray;
     }
-    
+
     /**
      * function save the subscribing user uri to the subscription
      */
@@ -186,7 +186,7 @@ class PubSubHubbub_Subscription
 
         $this->_versioning->endAction();
     }
-    
+
     /**
      * save IRI of the model where the resource for this subscription is located in
      */
@@ -252,44 +252,46 @@ class PubSubHubbub_Subscription
 
         $this->_versioning->endAction();
     }
-    
+
     /**
      * Check if there exists a resource for the given URL.
      */
-    public function existsResourceInModel($resourceUri) 
+    public function existsResourceInModel($resourceUri)
     {
-        return 0 == count($this->_selectedModelInstance->sparqlQuery(
-            'SELECT ?o WHERE { <'. $resourceUri .'> ?p ?o. } LIMIT 1;')
+        return 0 == count(
+            $this->_selectedModelInstance->sparqlQuery(
+                'SELECT ?o WHERE { <'. $resourceUri .'> ?p ?o. } LIMIT 1;'
+            )
         ) ? false : true;
     }
-    
+
     /**
      * Get a list of filenames related to any resource of the selected model.
      * @return array List of filenames
      */
-    public function getFilesForFeedUpdates($cacheDir) 
+    public function getFilesForFeedUpdates($cacheDir)
     {
         $files = scandir($cacheDir);
-        
+
         $result = array ();
-        
+
         // go through all files in the cache folder
         foreach ($files as $cacheFile) {
             // if current file is a pubsub feed update file
-            if('pubsub_' === substr($cacheFile, 0, 7)) {
-               
+            if ('pubsub_' === substr($cacheFile, 0, 7)) {
+
                 // extract hash from filename
                 $subscriptionHash = substr($cacheFile, 7, 32);
-                
+
                 $sourceResource = $this->getSourceResource($subscriptionHash);
-                
+
                 // there are feed updates for at least one resource in this model
                 if (true === $this->existsResourceInModel($sourceResource)) {
                     $result [] = $cacheFile;
                 }
             }
         }
-        
+
         return $result;
     }
 
@@ -415,7 +417,7 @@ class PubSubHubbub_Subscription
         }
         return false;
     }
-    
+
     /**
      * Determine if a subscription matching the key exists
      *
@@ -452,7 +454,7 @@ class PubSubHubbub_Subscription
         else
             return false;
     }
-    
+
     /**
      * Get the source resource by hash
      * @return string|null
@@ -467,11 +469,11 @@ class PubSubHubbub_Subscription
             }
             LIMIT 1;'
         );
-        
+
         foreach ($tmp as $entry) {
             return $entry['sourceResource'];
         }
-        
+
         return null;
     }
 
@@ -492,7 +494,7 @@ class PubSubHubbub_Subscription
         else
             return false;
     }
-    
+
     /**
      * get the topic url for a given resource uri
      */
@@ -510,7 +512,7 @@ class PubSubHubbub_Subscription
         else
             return false;
     }
-    
+
     /**
      * Create a new subscription
      * @param $data Array of values for the new subscription

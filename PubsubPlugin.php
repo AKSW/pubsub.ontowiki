@@ -20,11 +20,11 @@ class PubsubPlugin extends OntoWiki_Plugin
         // set history feed url
         $historyFeed = OntoWiki::getInstance()->config->urlBase . 'history/feed/?r=';
         $historyFeed .= urlencode((string) OntoWiki::getInstance()->selectedResource);
-        
+
         // set header field
         $event->response->setHeader('link', $historyFeed, true);
     }
-    
+
     /**
      * Trigger on Pub Hub pushed new feed updates for a particular topicUrl.
      * @param $event Erfurt_Event containing xhubSubscription property with subscription id
@@ -32,20 +32,20 @@ class PubsubPlugin extends OntoWiki_Plugin
     public function onFeedUpdate($event)
     {
         // if user want to auto insert incoming feed updates
-        if(true == $event->autoInsertFeedUpdates) {
-            
+        if (true == $event->autoInsertFeedUpdates) {
+
             // read statements from created file and build an array
             $statements = PubSubHubbub_FeedUpdate::getStatementListOutOfFeedUpdateFile(
                 $event->feedUpdateFilePath
-            );            
-            
+            );
+
             // import all statements of the built array into the model
             PubSubHubbub_FeedUpdate::importFeedUpdates(
-                $statements, 
+                $statements,
                 $event->sourceResource,
                 $event->modelInstance
             );
-            
+
             // remove file with feed updates
             unlink($event->feedUpdateFilePath);
         }
