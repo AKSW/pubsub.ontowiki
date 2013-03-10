@@ -12,12 +12,18 @@
  * Provides functions to model for instance, handle model wide feed updates
  *
  * @category   OntoWiki
- * @package    Extensions_pubsub
+ * @package    Extensions_Pubsub
+ * @author     Konrad Abicht, Lars Eidam
+ * @copyright  Copyright (c) 2006-2012, {@link http://aksw.org AKSW}
+ * @license    http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
  */
 class ModelOverviewModule extends OntoWiki_Module
 {
+
     /**
      * Constructor
+     *
+     * Setup all needed parameter
      */
     public function init()
     {
@@ -45,11 +51,21 @@ class ModelOverviewModule extends OntoWiki_Module
             ->prependFile($baseJavascriptPath. 'modeloverview.js', 'text/javascript');
     }
 
+    /**
+     * Set module title
+     *
+     * @return string title of the modul
+     */
     public function getTitle()
     {
         return "Feed updates";
     }
 
+    /**
+     * Decide if the modul should be shown
+     *
+     * @return true if the modul should shown, else false
+     */
     public function shouldShow()
     {
         // stop if model is not editable
@@ -57,13 +73,12 @@ class ModelOverviewModule extends OntoWiki_Module
             return false;
         }
 
-        /**
-         * Check if resources from selected model have feed updates, only show
-         * this module if there are feed updates.
-         */
+        // Check if resources from selected model have feed updates, only show
+        // this module if there are feed updates.
         $subscription = new PubSubHubbub_Subscription(
             $this->_owApp->selectedModel, $this->_privateConfig->get('subscriptions')
         );
+
         return 0 == count(
             $subscription->getFilesForFeedUpdates(
                 $this->_owApp->erfurt->getCacheDir()
@@ -71,6 +86,9 @@ class ModelOverviewModule extends OntoWiki_Module
         ) ? false : true;
     }
 
+    /**
+     * Render the template
+     */
     public function getContents()
     {
         return $this->render('pubsub/modeloverview');

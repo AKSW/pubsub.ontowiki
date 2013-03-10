@@ -6,6 +6,17 @@
  * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
  */
 
+/**
+ * OntoWiki Controller – pubsub
+ *
+ * Handle all subscribing, publishing, verification and feed updating processes
+ *
+ * @category   OntoWiki
+ * @package    Extensions_Pubsub
+ * @author     Konrad Abicht, Lars Eidam
+ * @copyright  Copyright (c) 2006-2012, {@link http://aksw.org AKSW}
+ * @license    http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
 class PubsubController extends OntoWiki_Controller_Component
 {
     protected $_subscriptionModelInstance;

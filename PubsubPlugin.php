@@ -2,14 +2,26 @@
 /**
  * This file is part of the {@link http://ontowiki.net OntoWiki} project.
  *
- * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @copyright Copyright (c) 2006-2013, {@link http://aksw.org AKSW}
  * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
  */
 
+/**
+ * OntoWiki Plugin – pubsub
+ *
+ * Handle the auto feed update and add the history feed link of each resource to the http header
+ *
+ * @category   OntoWiki
+ * @package    Extensions_Pubsub
+ * @author     Konrad Abicht, Lars Eidam
+ * @copyright  Copyright (c) 2006-2012, {@link http://aksw.org AKSW}
+ * @license    http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
 class PubsubPlugin extends OntoWiki_Plugin
 {
     /**
-     * used on linked data redirect to add link field to header
+     * Used on linked data redirect to add link field to header
+     * @param $event Erfurt_Event
      */
     public function onBeforeLinkedDataRedirect($event)
     {
@@ -19,7 +31,7 @@ class PubsubPlugin extends OntoWiki_Plugin
 
         // set history feed url
         $historyFeed = OntoWiki::getInstance()->config->urlBase . 'history/feed/?r=';
-        $historyFeed .= urlencode((string) OntoWiki::getInstance()->selectedResource);
+        $historyFeed .= urlencode((string)OntoWiki::getInstance()->selectedResource);
 
         // set header field
         $event->response->setHeader('link', $historyFeed, true);
