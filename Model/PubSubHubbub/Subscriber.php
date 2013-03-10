@@ -2,10 +2,21 @@
 /**
  * This file is part of the {@link http://ontowiki.net OntoWiki} project.
  *
- * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @copyright Copyright (c) 2006-2013, {@link http://aksw.org AKSW}
  * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
  */
 
+ /**
+ * OntoWiki Pubsub PubSubHubbub Subscriber
+ *
+ * Handle the subscribing process and extend the Zend Feed Pubsubhubbub Subscriber
+ *
+ * @category   OntoWiki
+ * @package    Extensions_Pubsub_PubSubHubbub
+ * @author     Konrad Abicht, Lars Eidam
+ * @copyright  Copyright (c) 2006-2012, {@link http://aksw.org AKSW}
+ * @license    http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
 class PubSubHubbub_Subscriber
     extends Zend_Feed_Pubsubhubbub_Subscriber
 {
@@ -13,8 +24,8 @@ class PubSubHubbub_Subscriber
      * Return a list of standard protocol/optional parameters for addition to
      * client's POST body that are specific to the current Hub Server URL
      *
-     * @param  string $hubUrl
-     * @param  mode $hubUrl
+     * @param  string $hubUrl hub URL
+     * @param  mode   $mode   subscribe or unsubscribe
      * @return string
      */
     protected function _getRequestParameters($hubUrl, $mode)
@@ -33,9 +44,7 @@ class PubSubHubbub_Subscriber
             'hub.topic' => $this->getTopicUrl(),
         );
 
-        if ($this->getPreferredVerificationMode()
-                == Zend_Feed_Pubsubhubbub::VERIFICATION_MODE_SYNC
-        ) {
+        if ($this->getPreferredVerificationMode() == Zend_Feed_Pubsubhubbub::VERIFICATION_MODE_SYNC) {
             $vmodes = array(
                 Zend_Feed_Pubsubhubbub::VERIFICATION_MODE_SYNC,
                 Zend_Feed_Pubsubhubbub::VERIFICATION_MODE_ASYNC,
@@ -105,7 +114,10 @@ class PubSubHubbub_Subscriber
     }
 
     /**
-     * function save the resource uri to the subscription
+     * Function save the resource uri to the subscription
+     *
+     * @param $resourceUri URI of the source resource
+     * @return void
      */
     public function addSourceResourceUri($resourceUri)
     {
@@ -121,7 +133,10 @@ class PubSubHubbub_Subscriber
     }
 
     /**
-     * function save the subscribing user uri to the subscription
+     * Function save the subscribing user uri to the subscription
+     *
+     * @param $subscribingUserUri URI of the subscribing user
+     * @return void
      */
     public function addSubscribingUserUri($subscribingUserUri)
     {
@@ -137,7 +152,10 @@ class PubSubHubbub_Subscriber
     }
 
     /**
-     * save iri of that model where the current resource is located in
+     * Save iri of that model where the current resource is located in
+     *
+     * @param $modelIri URI of the model where the current resource is located in
+     * @return void
      */
     public function addModelIri($modelIri)
     {

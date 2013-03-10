@@ -2,10 +2,22 @@
 /**
  * This file is part of the {@link http://ontowiki.net OntoWiki} project.
  *
- * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @copyright Copyright (c) 2006-2013, {@link http://aksw.org AKSW}
  * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
  */
 
+ /**
+ * OntoWiki Pubsub PubSubHubbub Subscriber Callback
+ *
+ * Handle the callback requests from the hub. Verify the sun/subsrcibing process and handle the
+ * feed updates
+ *
+ * @category   OntoWiki
+ * @package    Extensions_Pubsub_PubSubHubbub_Subscriber
+ * @author     Konrad Abicht, Lars Eidam
+ * @copyright  Copyright (c) 2006-2012, {@link http://aksw.org AKSW}
+ * @license    http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
+ */
 class PubSubHubbub_Subscriber_Callback
     extends Zend_Feed_Pubsubhubbub_Subscriber_Callback
 {
@@ -35,14 +47,14 @@ class PubSubHubbub_Subscriber_Callback
         if (strtolower($_SERVER['REQUEST_METHOD']) == 'post'
             && $this->_hasValidVerifyToken(null, false)
             && (stripos($contentType, 'application/atom+xml') === 0
-                || stripos($contentType, 'application/rss+xml') === 0
-                || stripos($contentType, 'application/xml') === 0
-                || stripos($contentType, 'text/xml') === 0
-                || stripos($contentType, 'application/rdf+xml') === 0)
+            || stripos($contentType, 'application/rss+xml') === 0
+            || stripos($contentType, 'application/xml') === 0
+            || stripos($contentType, 'text/xml') === 0
+            || stripos($contentType, 'application/rdf+xml') === 0)
         ) {
             $this->setFeedUpdate($this->_getRawBody());
             $this->getHttpResponse()
-                 ->setHeader('X-Hub-On-Behalf-Of', $this->getSubscriberCount());
+                ->setHeader('X-Hub-On-Behalf-Of', $this->getSubscriberCount());
         /**
          * Handle any (un)subscribe confirmation requests
          */
@@ -61,7 +73,7 @@ class PubSubHubbub_Subscriber_Callback
                 $this->getStorage()->deleteSubscription($verifyTokenKey);
             }
         /**
-         * Hey, C'mon! We tried everything else!
+         * Response to any other request
          */
         } else {
             $this->getHttpResponse()->setHttpResponseCode(404);

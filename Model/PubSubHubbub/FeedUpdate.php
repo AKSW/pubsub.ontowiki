@@ -2,12 +2,22 @@
 /**
  * This file is part of the {@link http://ontowiki.net OntoWiki} project.
  *
- * @copyright Copyright (c) 2013, {@link http://aksw.org AKSW}
+ * @copyright Copyright (c) 2006-2013, {@link http://aksw.org AKSW}
  * @license http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
  */
 
+// TODO: why is every function static???
+
 /**
+ * OntoWiki Pubsub PubSubHubbub FeedUpdate
+ *
  * Handles feed updates for a certain resource.
+ *
+ * @category   OntoWiki
+ * @package    Extensions_Pubsub_PubSubHubbub
+ * @author     Konrad Abicht, Lars Eidam
+ * @copyright  Copyright (c) 2006-2012, {@link http://aksw.org AKSW}
+ * @license    http://opensource.org/licenses/gpl-license.php GNU General Public License (GPL)
  */
 class PubSubHubbub_FeedUpdate
 {
@@ -18,6 +28,7 @@ class PubSubHubbub_FeedUpdate
 
     /**
      * Read pubsub file and generates statements (add and delete)
+     *
      * @param $filepath File to read
      * @return array
      */
@@ -30,7 +41,7 @@ class PubSubHubbub_FeedUpdate
         foreach ($xml->entry as $entry) {
             $namespaces = $entry->getNamespaces(true);
             $xhtml = $entry->content->children($namespaces['xhtml']);
-            $divContent = json_decode((string) $xhtml->div);
+            $divContent = json_decode((string)$xhtml->div);
             $statements[$divContent->id] = $divContent;
         }
 
@@ -39,6 +50,7 @@ class PubSubHubbub_FeedUpdate
 
     /**
      * Import given statements (feed updates) into the model
+     *
      * @param $statements List of add and delete statements
      * @param $r Resource URI which are related to the given $statements
      * @model $model Model instance to add and delete statements from
@@ -102,6 +114,7 @@ class PubSubHubbub_FeedUpdate
 
     /**
      * Removes all files which are related to a given $subscriptionId
+     *
      * @param $cacheFiles List of filenames
      * @param $subscriptionId ID to a certain subscription
      * @param $cacheFolder Path to OntoWiki cache folder
@@ -117,7 +130,10 @@ class PubSubHubbub_FeedUpdate
     }
 
     /**
+     * Extract the subscription id from a given filename
      *
+     * @param string $filename name of the file
+     * @return string subscription id of file
      */
     public static function getSubscriptionIdOutOfFilename($filename)
     {

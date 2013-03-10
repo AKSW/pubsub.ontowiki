@@ -1,4 +1,4 @@
-// 
+// transform all array key to lower case
 function arrayKeysToLower(data) {
     for ( var index in data) {
         data[index.toLowerCase()] = data[index];
@@ -98,7 +98,7 @@ function publishSubscriptionTopicUrl(hubUrl, subscriptionTopicUrl, callback) {
     });
 }
 
-//
+// subscripe to a given topic url over an given hub 
 function subscribe(topicUrl, mode) {
     $.ajax({
         url: urlBase + 'pubsub/subscription',
