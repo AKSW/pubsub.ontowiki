@@ -81,7 +81,7 @@ class ModelOverviewModule extends OntoWiki_Module
 
         return 0 == count(
             $subscription->getFilesForFeedUpdates(
-                $this->_owApp->erfurt->getCacheDir()
+                $this->_owApp->erfurt->getTmpDir()
             )
         ) ? false : true;
     }

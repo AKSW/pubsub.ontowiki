@@ -199,7 +199,7 @@ class PubsubController extends OntoWiki_Controller_Component
         // if hub sends you a couple of feed updates
         if (true === $callback->hasFeedUpdate()) {
             //get filepath for the feed update files
-            $filePath = $this->_owApp->erfurt->getCacheDir() .
+            $filePath = $this->_owApp->erfurt->getTmpDir() .
                         "pubsub_" .
                         $this->_request->getParam('xhub_subscription') .
                         "_" .
@@ -387,7 +387,7 @@ class PubsubController extends OntoWiki_Controller_Component
         // if the subscription id isn't empty
         if (false !== $subscriptionId) {
             //get the erfurt cache dir
-            $cacheFiles = scandir($this->_owApp->erfurt->getCacheDir());
+            $cacheFiles = scandir($this->_owApp->erfurt->getTmpDir());
 
             // search thrue the cahce dir to find filename with the subscription id
             foreach ($cacheFiles as $filename) {
@@ -440,7 +440,7 @@ class PubsubController extends OntoWiki_Controller_Component
         if (false !== $subscriptionId) {
 
             // get and read cache dir
-            $cacheFolder = $this->_owApp->erfurt->getCacheDir();
+            $cacheFolder = $this->_owApp->erfurt->getTmpDir();
             $cacheFiles = scandir($cacheFolder);
 
             // go through all cachedir files
@@ -499,7 +499,7 @@ class PubsubController extends OntoWiki_Controller_Component
         );
 
         // get cache dir
-        $cacheFolder = $this->_owApp->erfurt->getCacheDir();
+        $cacheFolder = $this->_owApp->erfurt->getTmpDir();
 
         // get all related feed update files for the selected model
         $feedUpdateFiles = $subscription->getFilesForFeedUpdates(
